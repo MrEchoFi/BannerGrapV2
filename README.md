@@ -1,9 +1,70 @@
-# BannerGrap: Advanced Multi-Protocol Security Scanner
-BannerGrap is a powerful, modular, and extensible Go-based security scanner designed for advanced reconnaissance and vulnerability assessment across a wide range of network services.
+<div align="center">
+    <img src="" alt="gif" width="730" height="auto" />
+
+</div>
+
+<div align="center">
+  <img src="https://github.com/MrEchoFi/MrEchoFi/raw/4274f537dec313ac7dde4403fe0fae24259beade/Mr.EchoFi-New-Logo-with-ASCII.jpg" alt="logo" width="265" height="auto" />
+  <h1>BannerGrapV1</h1>
+   
+  <p>
+    A Banner Grap Tool for Cybersecurity Red Teamer'
+  </p>
+
+
+  📫 How to reach me  **http://mrechofi.github.io/Tanjib_portfolio_website/**, **tanjibisham777@gmail.com & tanjibisham888@gmail.com**
+## Video For Better Understanding:
+
+ </div>
+
+# Deacription:
+BannerGrap V2 is a powerful, modular, and extensible Go-based security scanner designed for advanced reconnaissance and vulnerability assessment across a wide range of network services.
 It combines classic banner grabbing with active vulnerability probing, CVE/exploit matching, brute force stubs, and reporting, making it a valuable tool for penetration testers, red teamers, and defenders.
 
-# Key Features:
+# ### Key Features:
+# Red Team (Offensive Security) Uses:
+<p>
+ Reconnaissance & Enumeration:
+Quickly map out all live hosts, open ports, and running services across a target network.
+ 
+Vulnerability Discovery:
+Automatically detect outdated, misconfigured, or vulnerable software (Ex:, Apache, Nginx, SSH, FTP, etc.) using banner analysis and CVE matching.
 
+Active Exploitation Probing:
+Use built-in probes (Heartbleed, Shellshock, Log4Shell) to safely check for critical vulnerabilities.
+
+Brute Force Attacks:
+Attempt SSH brute force with custom or well-known username/password lists to identify weak credentials and gain initial access.
+
+Attack Surface Mapping:
+Identify hidden admin panels, anonymous FTP, and other risky exposures for further exploitation.
+
+Automated Reporting:
+Generate structured reports (JSON, CSV, HTML) for documentation, pivoting, or sharing with the team.
+</p>
+
+# Blue Team (Defensive Security) Uses:
+<p>
+ Asset Inventory:
+Continuously scan internal and external networks to maintain an up-to-date inventory of all exposed services and their versions.
+ 
+Vulnerability Management:
+Detect and prioritize patching of vulnerable software before attackers can exploit them.
+
+Credential Hygiene:
+Test for weak or default SSH credentials across the environment to enforce strong authentication policies.
+
+Exposure Monitoring:
+Identify accidental exposures (Ex: open admin panels, anonymous FTP, legacy protocols) and reduce the attack surface.
+
+Incident Response:
+Use the tool during or after a breach to quickly assess what services and vulnerabilities were exposed.
+
+Compliance & Audit:
+Provide evidence of regular scanning and vulnerability management for compliance frameworks (PCI, HIPAA, etc.).
+</p>
+
+# Support:
 Multi-Protocol Support:
 Scan HTTP, HTTPS, HTTP/2, WebSocket, FTP, SMTP, SSH, Telnet, and more.
 
@@ -31,30 +92,8 @@ Fast, multi-threaded scanning for large-scale assessments.
 Extensible:
 Plugin system and modular codebase for easy feature expansion.
 
-# Usage: 
-`Usage: go run bannerGrap.go
--> & read these two files of its usage:
-[i] bannerGrap_Guid or Usage.txt
-[ii] New_advanced_bashScripts.md
--> Btw 2nd file i mean New_advanced_bashScripts.md is for version 2.0 speacily but the bannerGrap_Guid or Usage.txt is also important cause in this file it have all usages like basic to aggresive usage..
-Options:
 
--f targets.txt      File with list of targets (host[:port] per line)
--proto protocol     Protocol: http, https, http2, websocket, ftp, smtp, ssh, telnet, custom
--port PORT       Override port for all targets
--payload PAYLOAD   Custom payload (default based on protocol)
--timeout N      Timeout (s) per connection/read
--threads N      Number of concurrent scans
--max N        Maximum banner bytes to read
--o output.json|csv  Output file (.json or .csv)
--report-html file.html Output HTML report
--brute-userlist FILE Username list for brute force (optional)
--brute-passlist FILE Password list for brute force (optional)
--plugin-dir DIR   Directory for custom plugins/scripts (optional)
--v          Verbose: print progress per target
--version      Show version and exit
-
-# How It Helps in the Cyber World
+# How It Helps in the Cyber World:
 
 Penetration Testing:
 Quickly identifies exposed and vulnerable services across networks.
@@ -68,12 +107,7 @@ Assists in asset inventory, vulnerability management, and attack surface reducti
 Education & Research:
 Teaches protocol analysis, vulnerability detection, and Go security programming.
 
-# How to Contribute:
 
- Create a feature branch, and submit a pull request.
-Add new vulnerability signatures, active probes, or protocol modules.
-Improve reporting, performance, or add integrations (e.g., SIEM, ticketing).
-Report bugs or suggest features via issues.
 
 Credit:
 Developed by MrEchoFi (Md. Abu Naser Nayeem [Tanjib Isham]) and contributors.
