@@ -256,8 +256,8 @@
 
 
 # Tips:
-@ Use -threads and -timeout for aggressive speed.
-@ Use -o and --report-html for structured output.
-@ Combine with jq, awk, grep, and other Bash tools for post-processing.
-@ ******Mix, match, and tweak these to your heart’s content.
-@ Always have permission before scanning!
+- @ Use -threads and -timeout for aggressive speed.
+- @ Use -o and --report-html for structured output.
+- @ Combine with jq, awk, grep, and other Bash tools for post-processing.
+- @ ******Mix, match, and tweak these to your heart’s content.
+- @ Always have permission before scanning!
