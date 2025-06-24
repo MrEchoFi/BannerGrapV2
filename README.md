@@ -1,14 +1,14 @@
 <div align="center">
-    <img src="" alt="gif" width="730" height="auto" />
+    <img src="https://github.com/MrEchoFi/BannerGrapV2/blob/master/BannerGrapV2_Security_Scanner_Tool_1d0e04fd-c100-4173-88b9-52a99f69fc2b.jpeg?raw=true" alt="gif" width="730" height="auto" />
 
 </div>
 
 <div align="center">
   <img src="https://github.com/MrEchoFi/MrEchoFi/raw/4274f537dec313ac7dde4403fe0fae24259beade/Mr.EchoFi-New-Logo-with-ASCII.jpg" alt="logo" width="265" height="auto" />
-  <h1>BannerGrapV1</h1>
+  <h1>BannerGrapV2</h1>
    
   <p>
-    A Banner Grap Tool for Cybersecurity Red Teamer'
+    By this tool you can-> Recon, vuln discovery, brute force, attack surface mapping, reporting, exploit probing,Asset inventory, vuln management, credential hygiene, exposure monitoring, IR, compliance.
   </p>
 
 
