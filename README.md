@@ -15,6 +15,10 @@
   📫 How to reach me  **http://mrechofi.github.io/Tanjib_portfolio_website/**, **tanjibisham777@gmail.com & tanjibisham888@gmail.com**
 ## Video For Better Understanding:
 
+
+https://github.com/user-attachments/assets/d4bfc9ff-5fc2-4932-bc7e-e6d827cabf0b
+
+
  </div>
 
 # Deacription:
@@ -24,91 +28,111 @@ It combines classic banner grabbing with active vulnerability probing, CVE/explo
 # ### Key Features:
 # Red Team (Offensive Security) Uses:
 <p>
- Reconnaissance & Enumeration:
-Quickly map out all live hosts, open ports, and running services across a target network.
+ <li>Reconnaissance & Enumeration:
+Quickly map out all live hosts, open ports, and running services across a target network. </li>
  
-Vulnerability Discovery:
-Automatically detect outdated, misconfigured, or vulnerable software (Ex:, Apache, Nginx, SSH, FTP, etc.) using banner analysis and CVE matching.
+<li>Vulnerability Discovery:
+Automatically detect outdated, misconfigured, or vulnerable software (Ex:, Apache, Nginx, SSH, FTP, etc.) using banner analysis and CVE matching. </li>
 
-Active Exploitation Probing:
-Use built-in probes (Heartbleed, Shellshock, Log4Shell) to safely check for critical vulnerabilities.
+<li>Active Exploitation Probing:
+Use built-in probes (Heartbleed, Shellshock, Log4Shell) to safely check for critical vulnerabilities.</li>
 
-Brute Force Attacks:
-Attempt SSH brute force with custom or well-known username/password lists to identify weak credentials and gain initial access.
+<li>Brute Force Attacks:
+Attempt SSH brute force with custom or well-known username/password lists to identify weak credentials and gain initial access.</li>
 
-Attack Surface Mapping:
-Identify hidden admin panels, anonymous FTP, and other risky exposures for further exploitation.
+<li>Attack Surface Mapping:
+Identify hidden admin panels, anonymous FTP, and other risky exposures for further exploitation.</li>
 
-Automated Reporting:
-Generate structured reports (JSON, CSV, HTML) for documentation, pivoting, or sharing with the team.
+<li>Automated Reporting:
+Generate structured reports (JSON, CSV, HTML) for documentation, pivoting, or sharing with the team.</li>
 </p>
 
 # Blue Team (Defensive Security) Uses:
 <p>
- Asset Inventory:
-Continuously scan internal and external networks to maintain an up-to-date inventory of all exposed services and their versions.
+<li> Asset Inventory:
+Continuously scan internal and external networks to maintain an up-to-date inventory of all exposed services and their versions.</li>
  
-Vulnerability Management:
-Detect and prioritize patching of vulnerable software before attackers can exploit them.
+<li>Vulnerability Management:
+Detect and prioritize patching of vulnerable software before attackers can exploit them.</li>
 
-Credential Hygiene:
-Test for weak or default SSH credentials across the environment to enforce strong authentication policies.
+<li>Credential Hygiene:
+Test for weak or default SSH credentials across the environment to enforce strong authentication policies.</li>
 
-Exposure Monitoring:
-Identify accidental exposures (Ex: open admin panels, anonymous FTP, legacy protocols) and reduce the attack surface.
+<li>Exposure Monitoring:
+Identify accidental exposures (Ex: open admin panels, anonymous FTP, legacy protocols) and reduce the attack surface.</li>
 
-Incident Response:
-Use the tool during or after a breach to quickly assess what services and vulnerabilities were exposed.
+<li>Incident Response:
+Use the tool during or after a breach to quickly assess what services and vulnerabilities were exposed.</li>
 
-Compliance & Audit:
-Provide evidence of regular scanning and vulnerability management for compliance frameworks (PCI, HIPAA, etc.).
+<li>Compliance & Audit:
+Provide evidence of regular scanning and vulnerability management for compliance frameworks (PCI, HIPAA, etc.).</li>
 </p>
 
 # Support:
-Multi-Protocol Support:
-Scan HTTP, HTTPS, HTTP/2, WebSocket, FTP, SMTP, SSH, Telnet, and more.
+<li>Multi-Protocol Support:
+Scan HTTP, HTTPS, HTTP/2, WebSocket, FTP, SMTP, SSH, Telnet, and more.</li>
 
-Banner Grabbing:
-Collects service banners and fingerprints for rapid identification.
+<li>Banner Grabbing:
+Collects service banners and fingerprints for rapid identification.</li>
 
-Signature-Based Vulnerability Detection:
-Detects 50+ popular server products and flags known vulnerable versions.
+<li>Signature-Based Vulnerability Detection:
+Detects 50+ popular server products and flags known vulnerable versions.</li>
 
-Active Probes:
-Includes safe, practical stubs for Heartbleed, Shellshock, and Log4Shell detection.
+<li>Active Probes:
+Includes safe, practical stubs for Heartbleed, Shellshock, and Log4Shell detection.</li>
 
-CVE/Exploit DB Integration:
-Matches banners to known CVEs using regex and can be extended for real DB integration.
+<li>CVE/Exploit DB Integration:
+Matches banners to known CVEs using regex and can be extended for real DB integration.</li>
 
-Brute Force & Enumeration Stubs:
-Framework for credential brute forcing and service enumeration.
+<li>Brute Force & Enumeration Stubs:
+Framework for credential brute forcing and service enumeration.</li>
 
-Reporting:
-Outputs results in JSON, CSV, and HTML formats for easy integration and sharing.
+<li>Reporting:
+Outputs results in JSON, CSV, and HTML formats for easy integration and sharing.</li>
 
-Concurrency:
-Fast, multi-threaded scanning for large-scale assessments.
+<li>Concurrency:
+Fast, multi-threaded scanning for large-scale assessments.</li>
 
-Extensible:
-Plugin system and modular codebase for easy feature expansion.
+<li>Extensible:
+Plugin system and modular codebase for easy feature expansion.</li>
 
+# ## Installation Process:
+         # Install git
+           sudo apt install git
+
+         # Install golang
+           sudo apt install golang
+
+         # Clone My Repo
+         git clone https://github.com/MrEchoFi/BannerGrapV2.git
+
+         # Change Directory
+            cd BannerGrapV2
+
+         # run the tool and follow its 'bannerGrap_Guid or Usage.txt'; but specially read & follow this-> 'New_advanced_bashScripts.md' for full usage of guidelines. By             this guidline u can use this tool in aggressive mode, basic mode and intermediate mode.
+           
+           go run bannerGrap.go
+
+           or, run this as-> go build bannerGrap.go
+           then run this,    ./bannerGrap
+
+           //follow the guidline- 'New_advanced_bashScripts.md' for better bash scripting .. 
 
 # How It Helps in the Cyber World:
 
-Penetration Testing:
-Quickly identifies exposed and vulnerable services across networks.
+<li>Penetration Testing:
+Quickly identifies exposed and vulnerable services across networks.</li>
 
-Red Team Operations:
-Automates reconnaissance and initial access vector discovery.
+<li>Red Team Operations:
+Automates reconnaissance and initial access vector discovery.</li>
 
-Blue Team/Defensive Security:
-Assists in asset inventory, vulnerability management, and attack surface reduction.
+<li>Blue Team/Defensive Security:
+Assists in asset inventory, vulnerability management, and attack surface reduction.</li>
 
-Education & Research:
-Teaches protocol analysis, vulnerability detection, and Go security programming.
+<li>Education & Research:
+Teaches protocol analysis, vulnerability detection, and Go security programming.</li>
 
 
 
-Credit:
-Developed by MrEchoFi (Md. Abu Naser Nayeem [Tanjib Isham]) and contributors.
+
 
