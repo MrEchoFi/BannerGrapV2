@@ -158,7 +158,7 @@ Plugin system and modular codebase for easy feature expansion.</li>
         then run: 
              ./start_banner.sh
 
-             # run the tool and follow its 'bannerGrap_Guid or Usage.txt'; but specially read & follow this-> 'New_advanced_bashScripts.md' for full usage of guidelines. By             this guidline u can use this tool in aggressive mode, basic mode and intermediate mode.
+             # run the tool and follow its 'bannerGrap_Guid or Usage.txt'; but specially read & follow this-> 'New_advanced_bashScripts.md' for full usage of guidelines.  By this guidline u can use this tool in aggressive mode, basic mode and intermediate mode.
 
            # Convert using 'chmod':
               chmod +x run_bannerv2.sh
