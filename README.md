@@ -8,7 +8,7 @@
   <h1>BannerGrapV2</h1>
    
   <p>
-    By this DevSecOps based tool you can-> Recon, vuln discovery, brute force, attack surface mapping, reporting, exploit probing,Asset inventory, vuln management, credential hygiene, exposure monitoring, IR, compliance.
+    By this DevSecOps Based' tool you can-> Recon, vuln discovery, brute force, attack surface mapping, reporting, exploit probing,Asset inventory, vuln management, credential hygiene, exposure monitoring, IR, compliance.
   </p>
 
 
