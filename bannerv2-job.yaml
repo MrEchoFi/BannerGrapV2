@@ -1,0 +1,18 @@
+# bannerv2-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bannerv2-job
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: bannerv2
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: bannerv2
+          image: bannerv2
+          imagePullPolicy: Never
+          args: ["192.168.0.1:80"]

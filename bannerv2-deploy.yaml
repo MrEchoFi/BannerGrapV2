@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bannerv2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bannerv2
+  template:  # ✅ Nested inside spec
+    metadata:
+      labels:
+        app: bannerv2
+    spec:
+      containers:
+        - name: bannerv2
+          image: bannerv2
+          imagePullPolicy: Never
+          args: ["192.168.0.1:80"]
+
