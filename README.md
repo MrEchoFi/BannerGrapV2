@@ -142,12 +142,21 @@ Plugin system and modular codebase for easy feature expansion.</li>
 
            @~ Using Kubernetes + Decker:
 
-           ### Minikube Setup (First Time):
-           # Start Minikube with Docker driver
-              minikube start --driver=docker
+           ### Minikube Setup:
+         # This will spin up your local K8s cluster using your WSL2 Docker
+         
+            minikube start --driver=docker
 
-           # Enable Kubernetes dashboard (optional)
-              minikube dashboard &
+         # Optional: enable the default storageclass and dashboard
+         
+            minikube addons enable default-storageclass
+            minikube addons enable dashboard
+
+          # Now start the benner or setup the banner.sh:
+             
+             chmod +x start_banner.sh
+        then run: 
+             ./start_banner.sh
 
              # run the tool and follow its 'bannerGrap_Guid or Usage.txt'; but specially read & follow this-> 'New_advanced_bashScripts.md' for full usage of guidelines. By             this guidline u can use this tool in aggressive mode, basic mode and intermediate mode.
 
