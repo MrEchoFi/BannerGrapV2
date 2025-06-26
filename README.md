@@ -8,7 +8,7 @@
   <h1>BannerGrapV2</h1>
    
   <p>
-    By this tool you can-> Recon, vuln discovery, brute force, attack surface mapping, reporting, exploit probing,Asset inventory, vuln management, credential hygiene, exposure monitoring, IR, compliance.
+    By this DevSecOps based tool you can-> Recon, vuln discovery, brute force, attack surface mapping, reporting, exploit probing,Asset inventory, vuln management, credential hygiene, exposure monitoring, IR, compliance.
   </p>
 
 
@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/d4bfc9ff-5fc2-4932-bc7e-e6d827cabf0b
  </div>
 
 # Deacription:
-BannerGrap V2 is a powerful, modular, and extensible Go-based security scanner designed for advanced reconnaissance and vulnerability assessment across a wide range of network services.
+BannerGrap V2 is a powerful, modular, and extensible Golang & DevSecOps based security scanner designed for advanced reconnaissance and vulnerability assessment across a wide range of network services.
 It combines classic banner grabbing with active vulnerability probing, CVE/exploit matching, brute force stubs, and reporting, making it a valuable tool for penetration testers, red teamers, and defenders.
 
 # ### Key Features:
@@ -97,6 +97,8 @@ Fast, multi-threaded scanning for large-scale assessments.</li>
 Plugin system and modular codebase for easy feature expansion.</li>
 
 # ## Installation Process:
+         //~// You can run this tool in three ways:
+         @~1st way: 
          # Install git
            sudo apt install git
 
@@ -118,6 +120,50 @@ Plugin system and modular codebase for easy feature expansion.</li>
 
            //follow the guidline- 'New_advanced_bashScripts.md' for better bash scripting .. 
 
+
+           @~2nd way using "Docker" for Containerized performence with safety/lab:
+
+           git clone <github link>
+           cd BannerGrapV2
+
+           # run the tool and follow its 'bannerGrap_Guid or Usage.txt'; but specially read & follow this-> 'New_advanced_bashScripts.md' for full usage of guidelines. By             this guidline u can use this tool in aggressive mode, basic mode and intermediate mode.
+
+           # Build the Docker image
+           docker build -t bannerv2 .
+
+           then run:
+           docker run bannerv2
+
+           Test Tool in Container with more clean (Optional):
+           docker run --rm bannerv2 
+
+           //follow the guidline- 'New_advanced_bashScripts.md' for better bash scripting .. 
+
+
+           @~ Using Kubernetes + Decker:
+
+           ### Minikube Setup (First Time):
+           # Start Minikube with Docker driver
+              minikube start --driver=docker
+
+           # Enable Kubernetes dashboard (optional)
+              minikube dashboard &
+
+             # run the tool and follow its 'bannerGrap_Guid or Usage.txt'; but specially read & follow this-> 'New_advanced_bashScripts.md' for full usage of guidelines. By             this guidline u can use this tool in aggressive mode, basic mode and intermediate mode.
+
+           # Convert using 'chmod':
+              chmod +x run_bannerv2.sh
+
+         # Run like this:
+              ./run_bannerv2.sh <target ip> <port> --proto http https --threads 20 --timeout 8 --o scan.csv --v
+
+         //follow the guidline- 'New_advanced_bashScripts.md' for better bash scripting .. 
+              
+
+           
+           
+           
+
 # How It Helps in the Cyber World:
 
 <li>Penetration Testing:
@@ -128,6 +174,9 @@ Automates reconnaissance and initial access vector discovery.</li>
 
 <li>Blue Team/Defensive Security:
 Assists in asset inventory, vulnerability management, and attack surface reduction.</li>
+
+<li>DevSecOps Operation:
+Identify vulnerabilities and can do exploits, reconnaissance, find hidden banner & dir etc. </li>
 
 <li>Education & Research:
 Teaches protocol analysis, vulnerability detection, and Go security programming.</li>
