@@ -1,5 +1,14 @@
+```bash
+ ____ ___  _________   _____    ___________________
+|    |   \/   _____/  /  _  \  /  _____/\_   _____/
+|    |   /\_____  \  /  /_\  \/   \  ___ |    __)_ 
+|    |  / /        \/    |    \    \_\  \|        \
+|______/ /_______  /\____|__  /\______  /_______  /
+                 \/         \/        \/        \/ 
+```
 
 # Flags:
+```bash
 
   -f string
         File containing newline-separated targets (host or host:port)
@@ -17,11 +26,19 @@
         Output file path (.json or .csv, txt  inferred by extension; console if empty)
 
    -h    help
- 
-  ### Note: First-> read and learn this 'bannerGrap_Guid or Usage.txt' then read the new 'New_advanced_bashScripts.md' for this Version 2.0 cause this two usage is important for advanced bash scripting.
+ ```
+### Note
+
+```bash
+First-> read and learn this 'bannerGrap_Guid or Usage.txt' then read the new 'New_advanced_bashScripts.md' for this Version 2.0 cause this two usage is important for advanced bash scripting.
+```
 
    ### USAGE:
-	 ## step 1_Usage:
+
+   # step 1_Usage:
+   
+   ```bash
+# step 1_Usage:
 		
 		go run bannerGrap.go example.com
 		go run bannerGrap.go example.com:80
@@ -67,9 +84,10 @@
 		go run bannerGrap.go -port 22 host1:22 host2:22 host3:22 -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o output.json
 		go run bannerGrap.go -port 22 host1:22 host2:22 host3:22 -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o output.csv
 		go run bannerGrap.go -port 22 host1:22 host2:22 host3:22 -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o output.txt
-		
+```
+	
 # step-2 Usage:
-
+```bash
 	   //Example of File-Based Bulk Scans-
 
 	    [i] Prepare a file targets.txt or any name u want with the following format:
@@ -304,58 +322,70 @@
 	   go run bannerGrap.go -f hosts.txt -threads 1000 -timeout 1
 	   go run bannerGrap.go -f hosts.txt -threads 2000 -timeout 1
 	   go run bannerGrap.go -f hosts.txt -threads 5000 -timeout 1
-
+```
 Step-3: Usage: 
+
    Output Formats: 
 
-   [i] JSON output:
+```bash
+# JSON output:
       go run bannerGrap.go -f hosts.txt -o results.json
-   [ii] CSV output: 
+# CSV output: 
       go run bannerGrap.go -f hosts.txt -o results.csv
-   [iii] Text output: 
+# Text output: 
       go run bannerGrap.go -f hosts.txt -o results.txt
-   [iv] Console output:
+# Console output:
       go run bannerGrap.go -f hosts.txt
-   [v] JSON output with custom payload:
-    go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.json
-   [vi] CSV output with custom payload:
-	   	go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.csv
-   [vii] Text output with custom payload:
-		go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.txt
-[viii] Console output with custom payload:
-			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
-[ix] JSON output with custom payload and timeout:
-			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.json
-[x] CSV output with custom payload and timeout:
-		go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.csv
-[xi] Text output with custom payload and timeout:
-	    	go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.txt
-[xii] Console output with custom payload and timeout:
-        	go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10
-[xiii] JSON output with custom payload and timeout and threads:
-		   go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.json
-[xiv] CSV output with custom payload and timeout and threads:
-			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.csv
-    [xv] Text output with custom payload and timeout and threads:
-			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.txt
-[xvi] Console output with custom payload and timeout and threads:
-		go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5
-[xvii] JSON output with custom payload and timeout and threads and port:
-        go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.json
-  [xviii] CSV output with custom payload and timeout and threads and port:
-        go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.csv
-  [xix] Text output with custom payload and timeout and threads and port:
-	    go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.txt
-  [xx] Console output with custom payload and timeout and threads and port:
-       go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80
-  [xxi] JSON output with custom payload and timeout and threads and port and protocol:
-       go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.json
-  [xxii] CSV output with custom payload and timeout and threads and port and protocol:
-       go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.csv
-  [xxiii] Text output with custom payload and timeout and threads and port and protocol:
-       go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.txt
-    
-# Step-3: “Extreme” Combined:
+
+------------------------------------------------------------------------------------------------------------------------------
+
+# JSON output with custom payload:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.json
+# CSV output with custom payload:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.csv
+# Text output with custom payload:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.txt
+# Console output with custom payload:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
+# JSON output with custom payload and timeout:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.json
+# CSV output with custom payload and timeout:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.csv
+# Text output with custom payload and timeout:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.txt
+
+------------------------------------------------------------------------------------------------------------------------------
+
+# Console output with custom payload and timeout:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10
+# JSON output with custom payload and timeout and threads:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.json
+# CSV output with custom payload and timeout and threads:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.csv
+# Text output with custom payload and timeout and threads:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.txt
+# Console output with custom payload and timeout and threads:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5
+# JSON output with custom payload and timeout and threads and port:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.json
+# CSV output with custom payload and timeout and threads and port:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.csv
+# Text output with custom payload and timeout and threads and port:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.txt
+# Console output with custom payload and timeout and threads and port:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80
+# JSON output with custom payload and timeout and threads and port and protocol:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.json
+# CSV output with custom payload and timeout and threads and port and protocol:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.csv
+# Text output with custom payload and timeout and threads and port and protocol:
+go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.txt
+
+
+```    
+# Step-4: “Extreme” Combined:
+
+```bash
 
   [3.1]
     //Scan 1,000 hosts, all on port 443 via HTTPS, with custom headers, 200 concurrent workers, and dump to CSV:
@@ -676,10 +706,11 @@ go run bannerGrap.go \
 go run bannerGrap.go --version
 go run bannerGrap.go -h
 
+```
 
 
 
 
-
-  [+]Mix, match, and tweak these to your heart’s content. Whether you’re storming data centers or scanning local labs,
+  [+]  Mix, match, and tweak these to your heart’s content. Whether you’re storming data centers or scanning local labs,
+  
   [+]  bannerGrap.go is armed for maximum throughput, deep fingerprinting, and streamlined output in JSON or CSV.
