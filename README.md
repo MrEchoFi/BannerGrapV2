@@ -647,19 +647,37 @@ bannergrapv2 -config config.yaml -target 192.168.1.1
 ```bash
 ├── bannerGrap
 ├── bannerGrap.go
-├── bannerGrap_Guid or Usage.txt
+├── bannergrapv2-darwin-amd64
+├── bannergrapv2-darwin-arm64
+├── bannergrapv2-linux-amd64
 ├── BannerGrapV2_Security_Scanner_Tool_1d0e04fd-c100-4173-88b9-52a99f69fc2b.jpeg
+├── bannergrapv2-windows-amd64.exe
 ├── bannerv2-deploy.yaml
 ├── bannerv2-job.yaml
 ├── bannerv2-service.yaml
 ├── build_and_run.sh
+├── CONTRIBUTING.md
 ├── Dockerfile
+├── docs
+│   ├── auditing.md
+│   ├── bannerGrap_Guide_of_Usage.md
+│   ├── bug-bounty.md
+│   ├── cicd.md
+│   ├── cli-reference.md
+│   ├── configuration.md
+│   ├── New_advanced_bashScripts.md
+│   ├── output-formats.md
+│   ├── pentesting.md
+│   └── scan-techniques.md
 ├── go.mod
 ├── go.sum
-├── New_advanced_bashScripts.md
+├── LICENSE
 ├── README.md
+├── report.html
 ├── run_bannerv2.sh
+├── SECURITY.md
 └── start_banner.sh
+
 ```
 ---
 
