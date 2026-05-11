@@ -19,7 +19,6 @@
 
 [🚀 Quick Start](#-quick-start) • [📖 Documentation](#-documentation) • [✨ Features](#-features) • [🤝 Contributing](#-contributing) • [💬 Community](#-community)
 
-![BannerGrapV2 Demo](https://github.com/user-attachments/assets/d4bfc9ff-5fc2-4932-bc7e-e6d827cabf0b)
 
 ## Video For Better Understanding:
 
@@ -109,8 +108,13 @@ BannerGrapV2 is a next-generation reconnaissance tool designed for **both Red Te
 ```bash
 # Linux/macOS
 curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-linux-amd64 -o bannergrapv2
+
 chmod +x bannergrapv2
+
 sudo mv bannergrapv2 /usr/local/bin/
+
+bannergrapv2
+bannergrapv2 -h
 
 # Windows (PowerShell)
 Invoke-WebRequest -Uri "https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-windows-amd64.exe" -OutFile "bannergrapv2.exe"
@@ -531,10 +535,10 @@ go run bannerGrap.go \
 - [Configuration File](docs/configuration.md)
 
 ### 💡 Use Cases
-- [Bug Bounty Workflow](docs/use-cases/bug-bounty.md)
-- [Penetration Testing](docs/use-cases/pentesting.md)
-- [Security Auditing](docs/use-cases/auditing.md)
-- [CI/CD Integration](docs/use-cases/cicd.md)
+- [Bug Bounty Workflow](docs/bug-bounty.md)
+- [Penetration Testing](docs/pentesting.md)
+- [Security Auditing](docs/auditing.md)
+- [CI/CD Integration](docs/cicd.md)
 
 ---
 
@@ -552,6 +556,14 @@ bannergrapv2 example.com -ports 80,443 -ssl-check -http-headers
 
 **Output:**
 ```bash
+__________                                      ________                                        
+\______   \_____    ____   ____   ___________  /  _____/___________  ______        ____   ____  
+ |    |  _/\__  \  /    \ /    \_/ __ \_  __ \/   \  __\_  __ \__  \ \____ \      / ___\ /  _ \ 
+ |    |   \ / __ \|   |  \   |  \  ___/|  | \/\    \_\  \  | \// __ \|  |_> >    / /_/  >  <_> )
+ |______  /(____  /___|  /___|  /\___  >__|    \______  /__|  (____  /   __/ /\  \___  / \____/ 
+        \/      \/     \/     \/     \/               \/           \/|__|    \/ /_____/         
+
+
 [+] Target: example.com (93.184.216.34)
 [+] Open Ports: 80, 443
 PORT    SERVICE    VERSION              VULNERABILITIES
@@ -569,6 +581,8 @@ Grade: A
 ### Example 2: Network Reconnaissance
 ```bash
 go run bannerGrap.go 192.168.1.0/24 -threads 200 -output network-scan.json
+
+or,
 
 bannergrapv2 192.168.1.0/24 -threads 200 -output network-scan.json
 ```
@@ -726,7 +740,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Join our growing community!
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Us-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/your-invite-link)
-[![Twitter Follow](https://img.shields.io/twitter/follow/MrEchoFi?style=for-the-badge&logo=twitter)](https://twitter.com/YourTwitter)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/md-abu-naser-nayeem-mrechofi-b29496332)
 
 ---
