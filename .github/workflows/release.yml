@@ -1,0 +1,84 @@
+name: Build and Release BannerGrapV2
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Release Binaries
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            binary_name: bannergrapv2-linux-amd64
+
+          - goos: darwin
+            goarch: amd64
+            binary_name: bannergrapv2-darwin-amd64
+
+          - goos: darwin
+            goarch: arm64
+            binary_name: bannergrapv2-darwin-arm64
+
+          - goos: windows
+            goarch: amd64
+            binary_name: bannergrapv2-windows-amd64.exe
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Download Dependencies
+        run: go mod tidy
+
+      - name: Build Binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -o ${{ matrix.binary_name }} .
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.binary_name }}
+          path: ${{ matrix.binary_name }}
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Show Files
+        run: ls -R release-assets
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/bannergrapv2-linux-amd64/bannergrapv2-linux-amd64
+            release-assets/bannergrapv2-darwin-amd64/bannergrapv2-darwin-amd64
+            release-assets/bannergrapv2-darwin-arm64/bannergrapv2-darwin-arm64
+            release-assets/bannergrapv2-windows-amd64.exe/bannergrapv2-windows-amd64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
