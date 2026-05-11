@@ -3,7 +3,8 @@
 # start_banner.sh: One-command launcher for BannerGrapV2 in Minikube WSL2
 # Usage: ./start_banner.sh <BannerGrap args>
 
-# 1. Ensure Minikube is running
+# 1. Ensure Minikube is start & running,
+
 if ! minikube status &> /dev/null; then
   echo "[+] Starting Minikube..."
   minikube start --driver=docker

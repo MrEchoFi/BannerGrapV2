@@ -1,5 +1,6 @@
 
-Flags:
+# Flags:
+
   -f string
         File containing newline-separated targets (host or host:port)
   -proto string
@@ -67,11 +68,11 @@ Flags:
 		go run bannerGrap.go -port 22 host1:22 host2:22 host3:22 -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o output.csv
 		go run bannerGrap.go -port 22 host1:22 host2:22 host3:22 -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o output.txt
 		
-       step-2 Usage:
+# step-2 Usage:
 
 	   //Example of File-Based Bulk Scans-
 
-	    i] Prepare a file targets.txt or any name u want with the following format:
+	    [i] Prepare a file targets.txt or any name u want with the following format:
 		 make file- # My list of FTP servers
                       ftp.site1.com
                       ftp.site2.com:2121
@@ -79,7 +80,7 @@ Flags:
 					  ftp.site4.com:22
         //by this u can scan all entries in targets.txt	
 
-        ii] You can create thousand_hosts.txt directly from your terminal using common shell tools like echo, seq, or for loops.
+        [ii] You can create thousand_hosts.txt directly from your terminal using common shell tools like echo, seq, or for loops.
 		Here are several ways, depending on what kind of hosts you want:
      ## Basic Manual Creation (Just a few lines to test):
 		echo "example.com" > thousand_hosts.txt
@@ -307,55 +308,56 @@ Flags:
 Step-3: Usage: 
    Output Formats: 
 
-   i] JSON output:
+   [i] JSON output:
       go run bannerGrap.go -f hosts.txt -o results.json
-   ii] CSV output: 
+   [ii] CSV output: 
       go run bannerGrap.go -f hosts.txt -o results.csv
-   iii] Text output: 
+   [iii] Text output: 
       go run bannerGrap.go -f hosts.txt -o results.txt
-   iv] Console output:
+   [iv] Console output:
       go run bannerGrap.go -f hosts.txt
-   v] JSON output with custom payload:
+   [v] JSON output with custom payload:
     go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.json
-   vi] CSV output with custom payload:
+   [vi] CSV output with custom payload:
 	   	go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.csv
-   vii] Text output with custom payload:
+   [vii] Text output with custom payload:
 		go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -o results.txt
-	viii] Console output with custom payload:
+[viii] Console output with custom payload:
 			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
-	ix] JSON output with custom payload and timeout:
+[ix] JSON output with custom payload and timeout:
 			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.json
-	x] CSV output with custom payload and timeout:
+[x] CSV output with custom payload and timeout:
 		go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.csv
-	xi] Text output with custom payload and timeout:
+[xi] Text output with custom payload and timeout:
 	    	go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -o results.txt
-	xii] Console output with custom payload and timeout:
+[xii] Console output with custom payload and timeout:
         	go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10
-	xiii] JSON output with custom payload and timeout and threads:
+[xiii] JSON output with custom payload and timeout and threads:
 		   go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.json
-	xiv] CSV output with custom payload and timeout and threads:
+[xiv] CSV output with custom payload and timeout and threads:
 			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.csv
-    xv] Text output with custom payload and timeout and threads:
+    [xv] Text output with custom payload and timeout and threads:
 			go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -o results.txt
-	xvi] Console output with custom payload and timeout and threads:
+[xvi] Console output with custom payload and timeout and threads:
 		go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5
-    xvii] JSON output with custom payload and timeout and threads and port:
+[xvii] JSON output with custom payload and timeout and threads and port:
         go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.json
-     xviii] CSV output with custom payload and timeout and threads and port:
+  [xviii] CSV output with custom payload and timeout and threads and port:
         go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.csv
-    xix] Text output with custom payload and timeout and threads and port:
+  [xix] Text output with custom payload and timeout and threads and port:
 	    go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -o results.txt
-    xx] Console output with custom payload and timeout and threads and port:
+  [xx] Console output with custom payload and timeout and threads and port:
        go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80
-    xxi] JSON output with custom payload and timeout and threads and port and protocol:
+  [xxi] JSON output with custom payload and timeout and threads and port and protocol:
        go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.json
-    xxii] CSV output with custom payload and timeout and threads and port and protocol:
+  [xxii] CSV output with custom payload and timeout and threads and port and protocol:
        go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.csv
-    xxiii] Text output with custom payload and timeout and threads and port and protocol:
+  [xxiii] Text output with custom payload and timeout and threads and port and protocol:
        go run bannerGrap.go -f hosts.txt -proto custom -payload "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" -timeout 10 -threads 5 -port 80 -proto http -o results.txt
     
-Step-3: “Extreme” Combined:
-    3.1]
+# Step-3: “Extreme” Combined:
+
+  [3.1]
     //Scan 1,000 hosts, all on port 443 via HTTPS, with custom headers, 200 concurrent workers, and dump to CSV:
 
    go run bannerGrap.go \
@@ -401,7 +403,7 @@ Step-3: “Extreme” Combined:
   -o full_scan.txt
 
 
- 3.2] //  Massive HTTPS Scan with Custom Header & CSV Output: Scan 10 000 domains over TLS, 500 threads, 2 s timeout, dump to CSV-
+ [3.2] //  Massive HTTPS Scan with Custom Header & CSV Output: Scan 10 000 domains over TLS, 500 threads, 2 s timeout, dump to CSV-
  
  go run bannerGrap.go \
   -f ten_thousand_domains.txt \
@@ -434,7 +436,7 @@ Step-3: “Extreme” Combined:
   -timeout 2 \
   -o https_scan_results.txt
 
- 3.3] Ultra-Fast HTTP Sweep on IP Range: Hit 192.168.1.1–254 on port 80 with 254 threads and 1 s timeout-
+ [3.3] Ultra-Fast HTTP Sweep on IP Range: Hit 192.168.1.1–254 on port 80 with 254 threads and 1 s timeout-
 
  go run bannerGrap.go \
   -f thousand_hosts.txt \
@@ -455,7 +457,7 @@ go run banner_grabber.go \
   -o http_sweep.json
   -o http_sweep.txt
 
-3.4] SMTP Banner Harvesting in Bulk (JSON): Pull EHLO banners from mail servers list, override port to 25, output JSON-
+[3.4] SMTP Banner Harvesting in Bulk (JSON): Pull EHLO banners from mail servers list, override port to 25, output JSON-
       
 //Pull EHLO banners from mail servers list, override port to 25, output JSON-
   go run bannerGrap.go \
@@ -505,7 +507,7 @@ go run banner_grabber.go \
   -timeout 5 \
   -o custom_banners.json
 
-3.5] FTP Anonymous Banner Grab: Scan FTP servers (file lists mixed hostnames & IPs), force port 21, no custom payload needed-
+[3.5] FTP Anonymous Banner Grab: Scan FTP servers (file lists mixed hostnames & IPs), force port 21, no custom payload needed-
 
 go run bannerGrap.go \
   -f ftp_targets.txt \
@@ -515,7 +517,7 @@ go run bannerGrap.go \
   -timeout 4 \
   -o ftp_banners.csv
 
-3.6] SSH Welcome Message Blitz: Read SSH welcomes from 1 000 hosts, port 22, high concurrency, console output-
+[3.6] SSH Welcome Message Blitz: Read SSH welcomes from 1 000 hosts, port 22, high concurrency, console output-
 go run bannerGrap.go \
   -f thousand_hosts.txt \
   -proto ssh \
@@ -523,7 +525,7 @@ go run bannerGrap.go \
   -threads 300 \
   -timeout 3
 
-  3.7] Telnet Service Fingerprinting: Connect to Telnet on mixed IPv4 & IPv6 targets, port 23-
+[3.7] Telnet Service Fingerprinting: Connect to Telnet on mixed IPv4 & IPv6 targets, port 23-
 go run bannerGrap.go \
   -f mixed_targets.txt \
   -proto telnet \
@@ -532,7 +534,7 @@ go run bannerGrap.go \
   -timeout 5 \
   -o telnet_fingerprints.json
 
-3.8] Custom TCP Payload for Proprietary Service: Send a proprietary “HELLO\n” payload to a custom daemon on port 9000-
+[3.8] Custom TCP Payload for Proprietary Service: Send a proprietary “HELLO\n” payload to a custom daemon on port 9000-
   go run bannerGrap.go \
   -f custom_daemon_hosts.txt \
   -proto custom \
@@ -542,20 +544,20 @@ go run bannerGrap.go \
   -timeout 6 \
   -o daemon_responses.csv
 
- 3.9] Mixed-Protocol One-Liner:Scan HTTP, then HTTPS, then SMTP sequentially (three invocations) on a single host:
+ [3.9] Mixed-Protocol One-Liner:Scan HTTP, then HTTPS, then SMTP sequentially (three invocations) on a single host:
    go run bannerGrap.go example.com                       # HTTP:80  
    go run bannerGrap.go -proto https example.com          # HTTPS:443  
    go run bannerGrap.go -proto smtp example.com:25        # SMTP:25
 
 
-3.10] Internal LAN Audit: Check local hostnames and IPs in internal_targets.txt, console output-
+[3.10] Internal LAN Audit: Check local hostnames and IPs in internal_targets.txt, console output-
  
  go run banner_grabber.go \
   -f internal_targets.txt \
   -threads 50 \
   -timeout 3
  
- 3.11]IPv6-Only Enumeration:Scan a list of IPv6 hosts on HTTPS, 100 threads-
+ [3.11]IPv6-Only Enumeration:Scan a list of IPv6 hosts on HTTPS, 100 threads-
   
 go run bannerGrap.go \
   -f ipv6_hosts.txt \
@@ -564,7 +566,7 @@ go run bannerGrap.go \
   -threads 100 \
   -timeout 4 \
 
-3.12} “All-In-One” Aggressive Sweep:One command to test HTTP, HTTPS, SMTP, SSH, FTP on the same file by chaining flags and targets inline:
+[3.12] “All-In-One” Aggressive Sweep:One command to test HTTP, HTTPS, SMTP, SSH, FTP on the same file by chaining flags and targets inline:
 
 go run bannerGrap.go \
 -f vip_targets.txt \
@@ -576,7 +578,7 @@ go run bannerGrap.go \
   && go run bannerGrap.go -f vip_targets.txt -proto ssh   -threads 250 -timeout 3 -o ssh_report.json \
   && go run bannerGrap.go -f vip_targets.txt -proto ftp   -threads 250 -timeout 3 -o ftp_report.json
 
-3.13] 10K HTTPS Hosts, CSV, Fast-Fail:
+[3.13] 10K HTTPS Hosts, CSV, Fast-Fail:
 go run bannerGrap.go \
   -f ten_thousand.txt \
   -proto https \
@@ -586,14 +588,14 @@ go run bannerGrap.go \
   -max 2048 \
   -o https_fast.csv
 
-3.14] 254-Thread LAN HTTP Sweep
+[3.14] 254-Thread LAN HTTP Sweep
 
 go run bannerGrap.go \
   -f <(for i in $(seq 1 254); do echo "192.168.1.$i"; done) \
   -threads 254 \
   -timeout 1
 
-3.15] Bulk SMTP JSON Harvest:
+[3.15] Bulk SMTP JSON Harvest:
 
 go run bannerGrap.go \
   -f mail_hosts.txt \
@@ -603,7 +605,7 @@ go run bannerGrap.go \
   -timeout 5 \
   -o smtp_banners.json
 
-3.16] FTP Anonymous & CSV:
+[3.16] FTP Anonymous & CSV:
 
 go run bannerGrap.go \
   -f ftp_list.txt \
@@ -612,7 +614,7 @@ go run bannerGrap.go \
   -threads 150 \
   -o ftp_out.csv
 
-3.17]SSH Welcome Blitz:
+[3.17]SSH Welcome Blitz:
 
 go run bannerGrap.go \
   -f hosts_ipv6_and_ipv4.txt \
@@ -622,7 +624,7 @@ go run bannerGrap.go \
   -timeout 3 \
   -v
 
-3.18]Telnet Fingerprinting:
+[3.18]Telnet Fingerprinting:
 
 go run bannerGrap.go \
   -f mixed_targets.txt \
@@ -632,7 +634,7 @@ go run bannerGrap.go \
   -timeout 4 \
   -o telnet.json
 
-3.19] Custom Daemon Probe:
+[3.19] Custom Daemon Probe:
 
 go run bannerGrap.go \
   -f daemon_hosts.txt \
@@ -643,7 +645,7 @@ go run bannerGrap.go \
   -timeout 6 \
   -o daemon.csv
 
-3.20] Chained Multi-Protocol Sweep:
+[3.20] Chained Multi-Protocol Sweep:
 
 # HTTP
 go run bannerGrap.go -f vip.txt -threads 250 -timeout 3 -o http.csv \
@@ -660,7 +662,7 @@ go run bannerGrap.go -f vip.txt -proto ssh -threads 250 -timeout 3 -o ssh.csv \
 # FTP
 go run bannerGrap.go -f vip.txt -proto ftp -threads 250 -timeout 3 -o ftp.csv
 
-3.21]IPv6-Only HTTPS Audit:
+[3.21]IPv6-Only HTTPS Audit:
 
 go run bannerGrap.go \
   -f ipv6_hosts.txt \
@@ -669,7 +671,7 @@ go run bannerGrap.go \
   -timeout 4 \
   -v
 
-3.22]  Version & Help:
+[3.22]  Version & Help:
 
 go run bannerGrap.go --version
 go run bannerGrap.go -h
@@ -679,7 +681,5 @@ go run bannerGrap.go -h
 
 
 
-  ///////Mix, match, and tweak these to your heart’s content. Whether you’re storming data centers or scanning local labs,
-  //  bannerGrap.go is armed for maximum throughput, deep fingerprinting, and streamlined output in JSON or CSV.
-
-*/
+  [+]Mix, match, and tweak these to your heart’s content. Whether you’re storming data centers or scanning local labs,
+  [+]  bannerGrap.go is armed for maximum throughput, deep fingerprinting, and streamlined output in JSON or CSV.
