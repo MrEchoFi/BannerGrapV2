@@ -3,6 +3,8 @@
 
 </div>
 
+<div align="center">
+	
   <h1>🎯 BannerGrapV2</h1>
 
 ### Advanced Network Reconnaissance & Vulnerability Discovery Tool
