@@ -8,7 +8,7 @@ __________                                      ________
         \/      \/     \/     \/     \/               \/           \/|__|    \/ /_____/
                                                                       Version 2.0
 
-    Copyright 2025 MrEchoFi_Ebwer
+    Copyright 2025 MrEchoFi
 
 	MIT License
 
@@ -1109,15 +1109,19 @@ __________                                      ________
 	}
 	if len(targets) == 0 {
 		fmt.Println(`Usage: go run bannerGrap.go
-        go run bannerGrap.go -h
+
+    go run bannerGrap.go -h
 
 
 [+] you can use or run this tool like this: [+]
-      go build bannerGrap.go 
-	  [+] then run it like this:
 
-	  ./bannerGrap 
-	  or, ./bannerGrap -f targets.txt -proto http -port 80 -timeout 5 -threads 10 -max 4096 -o output.json -v --brute-userlist <user wordlist> --brute-passlist <pass wordlist> --report-html report.html --plugin-dir plugins/
+      go build bannerGrap.go 
+
+[+] then run it like this:
+
+	./bannerGrap 
+	  or,
+	./bannerGrap -f targets.txt -proto http -port 80 -timeout 5 -threads 10 -max 4096 -o output.json -v --brute-userlist <user wordlist> --brute-passlist <pass wordlist> --report-html report.html --plugin-dir plugins/
 `)
 		flag.PrintDefaults()
 		os.Exit(1)
