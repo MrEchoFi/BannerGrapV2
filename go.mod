@@ -1,4 +1,4 @@
-module bannergrap
+module github.com/MrEchoFi/BannerGrapV2
 
 go 1.23.0
 
