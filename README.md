@@ -795,7 +795,8 @@ Teaches protocol analysis, vulnerability detection, and Go security programming.
 
 ### ⭐ If you find BannerGrapV2 useful, please give it a star!
 
-**Best Regard by [MrEchoFi](https://github.com/MrEchoFi)**
+**Best Regards ~ [MrEchoFi](https://github.com/MrEchoFi)**
+----------------------------------------------------------
 **Happy HackNight**
 
 [⬆ Back to Top](#-bannergrapv2)
