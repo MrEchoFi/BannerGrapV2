@@ -757,7 +757,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Join our growing community!
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20Us-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/your-invite-link)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/ntTW959Y)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/md-abu-naser-nayeem-mrechofi-b29496332)
 
 ---
