@@ -525,7 +525,7 @@ go run bannerGrap.go \
 ## 📖 Documentation
 
 ### 🎓 Tutorials
-- [Getting Started Guide](docs/bannerGrap_Guide)
+- [Getting Started Guide](docs/bannerGrap_Guide_of_Usage.md)
 - [Advanced Usage](docs/New_advanced_bashScripts.md)
 - [Scan Techniques](docs/scan-techniques.md)
 - [Output Formats](docs/output-formats.md)
