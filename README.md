@@ -12,7 +12,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/MrEchoFi/BannerGrapV2?style=for-the-badge&logo=github)](https://github.com/MrEchoFi/BannerGrapV2/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/MrEchoFi/BannerGrapV2?style=for-the-badge&logo=github)](https://github.com/MrEchoFi/BannerGrapV2/network/members)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=for-the-badge&logo=go)](https://golang.org)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=for-the-badge)](https://github.com/MrEchoFi/BannerGrapV2)
 
 **A blazing-fast, comprehensive reconnaissance tool built in Go for modern security professionals.**
@@ -98,26 +98,56 @@ BannerGrapV2 is a next-generation reconnaissance tool designed for **both Red Te
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21 or higher
+- Go 1.23 or higher (see `go.mod`)
 - Linux, macOS, or Windows
 - Root/Administrator privileges (for some scan types)
 
 ### Installation
 
 #### Option 1: Download Pre-built Binary (Recommended)
+
+Prebuilt, stripped binaries are available for every major platform/architecture:
+
+| Platform | Architecture | Binary |
+|---|---|---|
+| Linux | x86_64 | `bannergrapv2-linux-amd64` |
+| Linux | arm64 | `bannergrapv2-linux-arm64` |
+| macOS | Intel (x86_64) | `bannergrapv2-darwin-amd64` |
+| macOS | Apple Silicon (arm64) | `bannergrapv2-darwin-arm64` |
+| Windows | x86_64 | `bannergrapv2-windows-amd64.exe` |
+
 ```bash
-# Linux/macOS
+# Linux (x86_64)
 curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-linux-amd64 -o bannergrapv2
 
-chmod +x bannergrapv2
+# Linux (arm64)
+curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-linux-arm64 -o bannergrapv2
 
+# macOS (Intel)
+curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-darwin-amd64 -o bannergrapv2
+
+# macOS (Apple Silicon)
+curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-darwin-arm64 -o bannergrapv2
+
+chmod +x bannergrapv2
 sudo mv bannergrapv2 /usr/local/bin/
 
-bannergrapv2
+bannergrapv2 -version
 bannergrapv2 -h
+```
 
-# Windows (PowerShell)
+```powershell
+# Windows (PowerShell, x86_64)
 Invoke-WebRequest -Uri "https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-windows-amd64.exe" -OutFile "bannergrapv2.exe"
+
+.\bannergrapv2.exe -version
+```
+
+**Verify the download (recommended):** every release ships a `CHECKSUMS.txt` with SHA-256 sums for all five binaries.
+
+```bash
+curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/CHECKSUMS.txt -o CHECKSUMS.txt
+sha256sum --ignore-missing -c CHECKSUMS.txt
 ```
 
 #### Option 2: Build from Source
@@ -126,11 +156,20 @@ Invoke-WebRequest -Uri "https://github.com/MrEchoFi/BannerGrapV2/releases/latest
 git clone https://github.com/MrEchoFi/BannerGrapV2.git
 cd BannerGrapV2
 
-# Build
+# Build for your current platform
 go build -o bannergrapv2 .
 
 # Optional: Install globally
 sudo mv bannergrapv2 /usr/local/bin/
+```
+
+**Cross-compile for other platforms:**
+```bash
+GOOS=linux   GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bannergrapv2-linux-amd64      .
+GOOS=linux   GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o bannergrapv2-linux-arm64      .
+GOOS=darwin  GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bannergrapv2-darwin-amd64     .
+GOOS=darwin  GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o bannergrapv2-darwin-arm64     .
+GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bannergrapv2-windows-amd64.exe .
 ```
 
 #### Option 3: Install via Go
@@ -191,6 +230,56 @@ chmod +x run_bannerv2.sh
 
 [+] //follow the guidline- 'New_advanced_bashScripts.md' for better bash scripting .. 
 ```
+
+### 🔑 NVD API Key Configuration (Recommended)
+
+BannerGrapV2 can cross-check every service/version it fingerprints against the **National Vulnerability Database (NVD) CVE API 2.0** to report real, matching CVEs — not just a static local list. This live lookup is gated behind an `NVD_API_KEY` environment variable.
+
+- **Without a key:** the tool still works fully for banner grabbing, fingerprinting, etc. — NVD lookups are silently skipped (you'll see `NVD_API_KEY not set - skipping NVD lookup` if you run with `NVD_DEBUG=1`).
+- **With a key:** you get much higher NVD rate limits (see below) and CVE results get merged into your scan output.
+
+#### 1. Get a free NVD API key
+1. Go to the NVD API key request page: **https://nvd.nist.gov/developers/request-an-api-key**
+2. Enter your email address and submit the request.
+3. NIST emails you an activation link — click it to activate the key.
+4. Copy the key from the activation email (looks like a UUID, e.g. `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`).
+
+Without a key, NVD allows only 5 requests per 30 seconds; with a key, that jumps to 50 requests per 30 seconds, which matters once you're scanning more than a handful of hosts.
+
+#### 2. Configure the key for this project
+The repo ships a template file, `.env.example`:
+```bash
+NVD_API_KEY="your-nvd-api-key-here"
+```
+
+Copy it to `.env` and paste in your real key:
+```bash
+cp .env.example .env
+# then edit .env and replace "your-nvd-api-key-here" with the key NIST emailed you
+```
+
+`.env` is already listed in `.gitignore`, so your key is never committed — **never** commit a real key or put it directly in `.env.example`.
+
+At startup the tool automatically loads `.env` from the current working directory (see `loadDotEnv` in `bannerGrap.go`), so no extra flag is needed — just run `bannergrapv2` from the directory containing your `.env` file.
+
+Alternatively, export it directly in your shell instead of using a `.env` file (an exported/environment value always takes precedence over `.env`):
+```bash
+# Linux/macOS
+export NVD_API_KEY="your-nvd-api-key-here"
+bannergrapv2 example.com
+
+# Windows (PowerShell)
+$env:NVD_API_KEY="your-nvd-api-key-here"
+.\bannergrapv2.exe example.com
+```
+
+#### 3. Verify it's working
+Run any scan with `NVD_DEBUG=1` to see NVD lookup diagnostics on stderr:
+```bash
+NVD_DEBUG=1 bannergrapv2 example.com
+```
+If the key is picked up correctly, you'll see NVD candidate/query debug lines instead of the `NVD_API_KEY not set` message.
+
 ### Basic Usage
 
 ```bash
@@ -647,11 +736,14 @@ bannergrapv2 -config config.yaml -target 192.168.1.1
 ```bash
 ├── bannerGrap
 ├── bannerGrap.go
+├── bannerGrap_test.go
 ├── bannergrapv2-darwin-amd64
 ├── bannergrapv2-darwin-arm64
 ├── bannergrapv2-linux-amd64
+├── bannergrapv2-linux-arm64
 ├── BannerGrapV2_Security_Scanner_Tool_1d0e04fd-c100-4173-88b9-52a99f69fc2b.jpeg
 ├── bannergrapv2-windows-amd64.exe
+├── CHECKSUMS.txt
 ├── bannerv2-deploy.yaml
 ├── bannerv2-job.yaml
 ├── bannerv2-service.yaml
