@@ -766,6 +766,8 @@ bannergrapv2 -config config.yaml -target 192.168.1.1
 ## 🏗️ Project Structure or Project Tree
 
 ```bash
+├── .env.example
+├── .gitignore
 ├── bannerGrap
 ├── bannerGrap.go
 ├── bannerGrap_test.go
