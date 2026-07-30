@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/d4bfc9ff-5fc2-4932-bc7e-e6d827cabf0b
 
 BannerGrapV2 is a next-generation reconnaissance tool designed for **both Red Teams and Blue Teams**, combining speed, accuracy, and comprehensive reporting into a single powerful package.
 
-**By this DevSecOps Based' tool you can-> Recon, vuln discovery, brute force, attack surface mapping, reporting, exploit probing,Asset inventory, vuln management, credential hygiene, exposure monitoring, IR, compliance.**
+**By this DevSecOps Based' Framework you can-> Recon, vuln discovery, brute force, attack surface mapping, reporting, exploit probing,Asset inventory, vuln management, credential hygiene, exposure monitoring, IR, compliance.**
 
 ### 🎯 Perfect For:
 - 🔴 **Red Team Operations** - Attack surface mapping and exploitation
@@ -120,15 +120,47 @@ Prebuilt, stripped binaries are available for every major platform/architecture:
 # Linux (x86_64)
 curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-linux-amd64 -o bannergrapv2
 
+chmod +x bannergrapv2
+sudo mv bannergrapv2 /usr/local/bin/
+
+bannergrapv2 -version
+bannergrapv2 -h
+
+```
+```bash
 # Linux (arm64)
 curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-linux-arm64 -o bannergrapv2
 
+chmod +x bannergrapv2
+sudo mv bannergrapv2 /usr/local/bin/
+
+bannergrapv2 -version
+bannergrapv2 -h
+
+```
+```bash
 # macOS (Intel)
 curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-darwin-amd64 -o bannergrapv2
 
+chmod +x bannergrapv2
+sudo mv bannergrapv2 /usr/local/bin/
+
+bannergrapv2 -version
+bannergrapv2 -h
+
+```
+```bash
 # macOS (Apple Silicon)
 curl -L https://github.com/MrEchoFi/BannerGrapV2/releases/latest/download/bannergrapv2-darwin-arm64 -o bannergrapv2
 
+chmod +x bannergrapv2
+sudo mv bannergrapv2 /usr/local/bin/
+
+bannergrapv2 -version
+bannergrapv2 -h
+
+```
+```bash
 chmod +x bannergrapv2
 sudo mv bannergrapv2 /usr/local/bin/
 
